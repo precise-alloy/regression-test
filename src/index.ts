@@ -8,6 +8,8 @@ if (!command) {
   throw "`command` must be set";
 }
 
+console.log('test');
+
 backstop(command, { config })
   .then(() => {
     console.log(chalk.green(command.toUpperCase() + ' FINISHED SUCCESSFULLY'));

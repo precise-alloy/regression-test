@@ -1,4 +1,4 @@
-# Precise Alloy - Regression Test
+# Precise Alloy - Regression Test - Demo
 
 Please check [Documentation](https://tuyen.blog/optimizely-cms/testing/get-started/) for the instructions.
 

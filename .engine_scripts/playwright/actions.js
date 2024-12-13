@@ -85,10 +85,10 @@ module.exports = async (currentPage, scenario) => {
 
         files.forEach((file) => {
           if (path.isAbsolute(file)) {
-            throw '`file` must be relative path to "data" folder';
+            throw '`file` must be relative path to "visual_tests" folder';
           }
 
-          const filePath = path.join('./data', file);
+          const filePath = path.join('./visual_tests', file);
           if (!fs.existsSync(filePath)) {
             throw `file does not exist: ${file}`;
           }

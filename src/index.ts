@@ -28,7 +28,8 @@ ${PATCH_END}
 `;
 
 const packCompare = () => {
-  const reportIndex = path.resolve(__dirname, '../node_modules/backstopjs/compare/output/index.html');
+  const projectRootDir = process.cwd();
+  const reportIndex = path.resolve(projectRootDir, 'node_modules/backstopjs/compare/output/index.html');
   if (fs.existsSync(reportIndex)) {
     let html = fs.readFileSync(reportIndex, 'utf-8');
     const patchStartIndex = html.indexOf(PATCH_START);

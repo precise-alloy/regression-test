@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getReplacementProfile = (): ReplacementModel[] | undefined => {
   const replacementProfileName = getStringArg('replacement-profile') ?? process.env.REPLACEMENT_PROFILE;
   if (!!replacementProfileName) {
-    const replacementProfilePath = path.resolve(__dirname, '../data/_replacement-profiles.yaml');
+    const replacementProfilePath = path.resolve(__dirname, '../visual_tests/_replacement-profiles.yaml');
     if (!fs.existsSync(replacementProfilePath)) {
       throw "Replacement profile doesn't exist: " + replacementProfilePath;
     }

@@ -2,7 +2,7 @@ import fs from 'fs';
 import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
-import { getFlagArg, getStringArg, parseDataFromFile } from './helpers.js';
+import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
 import { fileURLToPath } from 'url';
 import { TestSuiteModel, ScenarioModel } from './types.js';
 import chalk from 'chalk';
@@ -15,9 +15,9 @@ const engine: 'puppeteer' | 'playwright' = 'playwright';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const testSuite = getStringArg('--test-suite');
 const isRef = getFlagArg('--ref');
-const globalRequiredLogin = getFlagArg('--requiredLogin')
+const globalRequiredLogin = getFlagArg('--requiredLogin');
 if (globalRequiredLogin) {
-  console.log('force run all scenarios in login mode')
+  console.log('force run all scenarios in login mode');
 }
 
 const scenarios: Scenario[] = [];
@@ -50,7 +50,7 @@ const getData = (testSuite: String): TestSuiteModel | undefined => {
   ];
 
   for (let i = 0; i < extensions.length; i++) {
-    const dataPath = path.resolve(__dirname, `../data/${testSuite}.tests.${extensions[i].ext}`);
+    const dataPath = path.resolve(__dirname, `../visual_tests/${testSuite}.tests.${extensions[i].ext}`);
 
     if (fs.existsSync(dataPath)) {
       console.log('Data path: ', dataPath);
@@ -96,7 +96,7 @@ const expandScenarios = (model: ScenarioModel, scenarios: ScenarioModel[], level
 };
 
 const data = getData(testSuite);
-const viewports = parseDataFromFile(data?.viewportsPath ?? 'data/_viewports.yaml') as ViewportNext[];
+const viewports = parseDataFromFile(data?.viewportsPath ?? 'visual_tests/_viewports.yaml') as ViewportNext[];
 if (data) {
   [].forEach.call(data.scenarios, (s: ScenarioModel) => {
     expandScenarios(s, data.scenarios, 0);
@@ -146,7 +146,7 @@ export const config: Config = {
   paths: {
     bitmaps_reference: '.backstop/' + testSuite + '/bitmaps_reference',
     bitmaps_test: '.backstop/' + testSuite + '/bitmaps_test',
-    engine_scripts: '.engine_scripts',
+    engine_scripts: `${getLibraryPath()}/.engine_scripts`,
     html_report: '.backstop/' + testSuite + '/html_report',
     ci_report: '.backstop/' + testSuite + '/ci_report',
   },

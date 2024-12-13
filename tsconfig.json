@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "composite": true,
     "allowJs": false,
     "skipLibCheck": true,
@@ -22,16 +18,9 @@
     "baseUrl": ".",
     "sourceMap": true,
     "paths": {
-      "@data/*": [
-        "./data/*"
-      ]
+      "@data/*": ["visual_tests/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.json"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.json"],
+  "exclude": ["node_modules"]
 }

@@ -4,35 +4,11 @@ import path, { dirname } from 'path';
 import { exec } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import chalk from 'chalk';
+import slash from 'slash';
 
 function getLibraryPath() {
   const fileName = fileURLToPath(import.meta.url);
-  let currentDir = dirname(fileName);
-
-  while (true) {
-    const packageJsonPath = path.join(currentDir, 'package.json');
-    if (fs.existsSync(packageJsonPath)) {
-      // We have found the package.json file
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-      if (
-        (packageJson.dependencies && packageJson.dependencies['regressify']) ||
-        (packageJson.devDependencies && packageJson.devDependencies['regressify'])
-      ) {
-        return `node_modules/${packageJson.name}`;
-      }
-    }
-
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) {
-      // We have reached the root directory
-      console.log(chalk.red('Could not find package.json file in the current directory or any of its parents. Current directory:'), import.meta.url);
-      console.log(chalk.red('___filename:'), __filename);
-      console.log(chalk.red('__dirname:'), __dirname);
-      return null;
-    }
-
-    currentDir = parentDir;
-  }
+  return slash(pathToFileURL(dirname(fileName)));
 }
 
 function runCommand(command) {

@@ -1,6 +1,6 @@
 {
   "name": "regressify",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "Visual regression tests support",
   "main": "index.js",
   "type": "module",
@@ -27,7 +27,6 @@
   "dependencies": {
     "backstopjs": "^6.2.2",
     "chalk": "^5.3.0",
-    "inquirer": "^12.2.0",
     "js-yaml": "^4.1.0",
     "ncp": "^2.0.0",
     "slash": "^5.1.0",

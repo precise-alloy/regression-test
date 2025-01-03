@@ -50,7 +50,7 @@ const getData = (testSuite: String): TestSuiteModel | undefined => {
   ];
 
   for (let i = 0; i < extensions.length; i++) {
-    const dataPath = path.resolve(__dirname, `../visual_tests/${testSuite}.tests.${extensions[i].ext}`);
+    const dataPath = path.join(process.cwd(), 'visual_tests', `${testSuite}.tests.${extensions[i].ext}`);
 
     if (fs.existsSync(dataPath)) {
       console.log('Data path: ', dataPath);

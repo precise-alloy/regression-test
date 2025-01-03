@@ -8,7 +8,7 @@ import slash from 'slash';
 
 function getLibraryPath() {
   const fileName = fileURLToPath(import.meta.url);
-  return slash(pathToFileURL(dirname(fileName)));
+  return slash(dirname(fileName));
 }
 
 function runCommand(command) {

@@ -6,10 +6,10 @@ on:
       - release
     paths:
       - .engine_scripts/**
+      - cli/**
       - src/**
       - package.json
       - cli.js
-      - generate-tests.js
 
   workflow_dispatch:
 

@@ -1,26 +1,6 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import path, { dirname } from 'path';
 import { exec } from 'child_process';
-import { fileURLToPath, pathToFileURL } from 'url';
 import chalk from 'chalk';
-
-export function getLibraryPath() {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-
-  let currentDir = __dirname;
-  while (!fs.existsSync(path.join(currentDir, 'package.json'))) {
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) {
-      return null;
-    }
-    currentDir = parentDir;
-  }
-  const packageJsonPath = path.join(currentDir, 'package.json');
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  return `node_modules/${packageJson.name}`;
-}
 
 export function runCommand(command) {
   const childProcess = exec(command, { env: { ...process.env, FORCE_COLOR: '1' } });

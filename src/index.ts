@@ -1,12 +1,9 @@
 import chalk from 'chalk';
 import backstop from 'backstopjs';
 import config from './config.js';
-import { getStringArg } from './helpers.js';
+import { getLibraryPath, getStringArg } from './helpers.js';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const command = getStringArg('--command') as 'approve' | 'init' | 'reference' | 'test' | undefined;
 if (!command) {
@@ -28,8 +25,7 @@ ${PATCH_END}
 `;
 
 const packCompare = () => {
-  const projectRootDir = process.cwd();
-  const reportIndex = path.resolve(projectRootDir, 'node_modules/backstopjs/compare/output/index.html');
+  const reportIndex = path.resolve(getLibraryPath(), 'node_modules/backstopjs/compare/output/index.html');
   if (fs.existsSync(reportIndex)) {
     let html = fs.readFileSync(reportIndex, 'utf-8');
     const patchStartIndex = html.indexOf(PATCH_START);

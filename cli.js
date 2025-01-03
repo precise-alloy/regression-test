@@ -42,7 +42,7 @@ if (command === 'init') {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
 
-  const postInstallPath = pathToFileURL(path.join(__dirname, 'generate_tests.js'));
+  const postInstallPath = pathToFileURL(path.join(__dirname, 'cli', 'generate_tests.js'));
   if (fs.existsSync(postInstallPath)) {
     console.log(chalk.yellow('Generate folder visual_tests ...'));
     await import(postInstallPath);
@@ -50,7 +50,7 @@ if (command === 'init') {
     console.log(chalk.red('generate_tests.js not found!'));
   }
 
-  const updatePackageJsonPath = pathToFileURL(path.join(__dirname, 'update-package.js'));
+  const updatePackageJsonPath = pathToFileURL(path.join(__dirname, 'cli', 'update-package.js'));
   if (fs.existsSync(updatePackageJsonPath)) {
     console.log(chalk.yellow('Update package.json ...'));
     await import(updatePackageJsonPath);

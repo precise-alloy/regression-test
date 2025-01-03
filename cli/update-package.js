@@ -5,7 +5,7 @@ import path from 'path';
 async function updatePackageJson() {
   const packageJsonPath = path.join(process.cwd(), 'package.json');
   if (!fs.existsSync(packageJsonPath)) {
-    console.log(chalk.red("package.json file doesn't exists"), err);
+    console.log(chalk.red("package.json file doesn't exists"));
     return;
   }
 

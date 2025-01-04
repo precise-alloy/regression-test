@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import pkg from 'ncp';
 import chalk from 'chalk';
-import { getLibraryPath } from './helpers';
+import { getLibraryPath } from './helpers.js';
 import slash from 'slash';
 
 const { ncp } = pkg;

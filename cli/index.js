@@ -4,7 +4,7 @@ import path from 'path';
 import { exec } from 'child_process';
 import { pathToFileURL } from 'url';
 import chalk from 'chalk';
-import { getLibraryPath } from './helpers';
+import { getLibraryPath } from './helpers.js';
 import slash from 'slash';
 
 const libraryPath = getLibraryPath();

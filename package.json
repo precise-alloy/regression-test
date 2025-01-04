@@ -23,7 +23,7 @@
     "test",
     "regression"
   ],
-  "author": "donghoang",
+  "author": "tuyen-at-work",
   "license": "ISC",
   "dependencies": {
     "backstopjs": "^6.2.2",

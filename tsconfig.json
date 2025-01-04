@@ -7,7 +7,6 @@
       "DOM.Iterable",
       "ESNext"
     ],
-    "outDir": "./dist",
     "composite": true,
     "allowJs": false,
     "skipLibCheck": true,

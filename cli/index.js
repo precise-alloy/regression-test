@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import fs from 'fs';
-import path, { dirname } from 'path';
+import path from 'path';
 import { exec } from 'child_process';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { pathToFileURL } from 'url';
 import chalk from 'chalk';
-import { getLibraryPath } from './cli/helpers';
+import { getLibraryPath } from './helpers';
 import slash from 'slash';
 
 const libraryPath = getLibraryPath();

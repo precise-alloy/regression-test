@@ -5,7 +5,6 @@ import { exec } from 'child_process';
 import { pathToFileURL } from 'url';
 import chalk from 'chalk';
 import { getLibraryPath } from './helpers.js';
-import slash from 'slash';
 
 const libraryPath = getLibraryPath();
 
@@ -37,7 +36,7 @@ const command = args[0].toLowerCase();
 let commandBase = `node ${libraryPath}/src/index.js`;
 
 if (command === 'init') {
-  const postInstallPath = slash(pathToFileURL(path.join(libraryPath, 'cli', 'generate-tests.js')));
+  const postInstallPath = pathToFileURL(path.join(libraryPath, 'cli', 'generate-tests.js'));
   if (fs.existsSync(postInstallPath)) {
     console.log(chalk.yellow('Generate folder visual_tests ...'));
     await import(postInstallPath);
@@ -45,7 +44,7 @@ if (command === 'init') {
     console.log(chalk.red('generate-tests.js not found!'));
   }
 
-  const updatePackageJsonPath = slash(pathToFileURL(path.join(libraryPath, 'cli', 'update-package.js')));
+  const updatePackageJsonPath = pathToFileURL(path.join(libraryPath, 'cli', 'update-package.js'));
   if (fs.existsSync(updatePackageJsonPath)) {
     console.log(chalk.yellow('Update package.json ...'));
     await import(updatePackageJsonPath);

@@ -107,7 +107,7 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
 
   const data = getData(testSuite);
 
-  const viewports = parseDataFromFile(data?.viewportsPath ?? 'visual_tests/_viewports.yaml') as ViewportNext[];
+  const viewports = parseDataFromFile(data?.viewportsPath ?? 'common/_viewports.yaml') as ViewportNext[];
   if (data) {
     [].forEach.call(data.scenarios, (s: ScenarioModel) => {
       expandScenarios(s, data.scenarios, 0);

@@ -10,7 +10,7 @@ const globalData = {
 };
 // loginAndSaveCookies.ts
 const getSignInData = async () => {
-  const signInPath = 'visual_tests/_signing-in.yaml';
+  const signInPath = 'common/_signing-in.yaml';
   let signInConfig = [];
   // Read Cookies from File, if exists
   if (!!signInPath && fs.existsSync(signInPath)) {

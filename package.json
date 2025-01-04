@@ -1,11 +1,11 @@
 {
   "name": "regressify",
-  "version": "1.0.33",
+  "version": "1.0.34",
   "description": "Visual regression tests support",
   "main": "src/index.ts",
   "type": "module",
   "bin": {
-    "regressify": "./cli/index.js"
+    "regressify": "./src/index.js"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@types/backstopjs": "^6.1.2",
     "@types/js-yaml": "^4.0.8",
+    "@types/ncp": "^2.0.8",
     "@types/node": "^20.8.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.2.2"

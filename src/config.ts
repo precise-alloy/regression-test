@@ -12,27 +12,33 @@ import { getTestUrl } from './replacements.js';
 const libraryPath = getLibraryPath();
 const engine: 'puppeteer' | 'playwright' = 'playwright';
 
-const testSuite = getStringArg('--test-suite');
-const isRef = getFlagArg('--ref');
-const globalRequiredLogin = getFlagArg('--requiredLogin');
-if (globalRequiredLogin) {
-  console.log('force run all scenarios in login mode');
+function getArgConfig(args: string[]) {
+  const testSuite = getStringArg(args, '--test-suite');
+  const isRef = getFlagArg(args, '--ref');
+  const globalRequiredLogin = getFlagArg(args, '--requiredLogin');
+  if (globalRequiredLogin) {
+    console.log('force run all scenarios in login mode');
+  }
+
+  if (!testSuite) {
+    console.log(chalk.red('Argument `--test-suite` must be set.'));
+    console.log(chalk.red('Sample command: npm run <command> -- --test-suite <test-suite>'));
+    console.log(chalk.red('Command is either `ref`, `approve` or `test`.'));
+    exit(1);
+  }
+
+  return {
+    testSuite,
+    isRef,
+    globalRequiredLogin,
+  };
 }
 
-const scenarios: Scenario[] = [];
-
-const getScriptPath = (scriptPath: string, engine: 'puppeteer' | 'playwright') => {
+function getScriptPath(scriptPath: string, engine: 'puppeteer' | 'playwright') {
   return path.join(libraryPath, '.engine_scripts', (engine == 'puppeteer' ? 'puppet' : 'playwright') + scriptPath);
-};
-
-if (!testSuite) {
-  console.log(chalk.red('Argument `--test-suite` must be set.'));
-  console.log(chalk.red('Sample command: npm run <command> -- --test-suite <test-suite>'));
-  console.log(chalk.red('Command is either `ref`, `approve` or `test`.'));
-  exit(1);
 }
 
-const getData = (testSuite: String): TestSuiteModel | undefined => {
+function getData(testSuite: String): TestSuiteModel | undefined {
   let extensions: { ext: string; parse: (content: string) => unknown }[] = [
     {
       ext: 'yaml',
@@ -59,9 +65,9 @@ const getData = (testSuite: String): TestSuiteModel | undefined => {
   }
 
   throw `Data file not found for test suite: ${testSuite}`;
-};
+}
 
-const expandScenarios = (model: ScenarioModel, scenarios: ScenarioModel[], level: number) => {
+function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level: number) {
   if (level > 100) {
     throw 'Level is too large';
   }
@@ -94,80 +100,90 @@ const expandScenarios = (model: ScenarioModel, scenarios: ScenarioModel[], level
   });
 
   model.needs = undefined;
-};
-
-const data = getData(testSuite);
-const viewports = parseDataFromFile(data?.viewportsPath ?? 'visual_tests/_viewports.yaml') as ViewportNext[];
-if (data) {
-  [].forEach.call(data.scenarios, (s: ScenarioModel) => {
-    expandScenarios(s, data.scenarios, 0);
-  });
-
-  const getTestUrlLocal = (url: string) => getTestUrl(url, isRef);
-
-  const pad = String(data?.scenarios.length).length;
-  data.scenarios.forEach((s, index) => {
-    const opts: ScenarioModel = {
-      ...s,
-      requiredLogin: globalRequiredLogin || s.requiredLogin,
-      getTestUrl: getTestUrlLocal,
-      url: isRef ? s.url : getTestUrl(s.url, isRef),
-      index: String(index + 1).padStart(pad, ' '),
-      total: data.scenarios.length,
-      delay: s.delay ?? 1000,
-      hideSelectors: s.hideSelectors ?? data.hideSelectors,
-      removeSelectors: s.removeSelectors ?? data.removeSelectors,
-      useCssOverride: s.useCssOverride ?? data.useCssOverride,
-      jsOnReadyPath: s.jsOnReadyPath,
-      viewports: !!s.viewportNames
-        ? typeof s.viewportNames === 'string'
-          ? viewports.filter((v) => v.label.toLowerCase() == (s.viewportNames as string).trim().toLowerCase())
-          : viewports.filter((v) => s.viewportNames?.includes(v.label))
-        : !!data.viewportNames
-        ? typeof data.viewportNames === 'string'
-          ? viewports.filter((v) => v.label.toLowerCase() == (data.viewportNames as string).trim().toLowerCase())
-          : viewports.filter((v) => data.viewportNames?.includes(v.label))
-        : undefined,
-      referenceUrl: !isRef ? s.url : undefined,
-      misMatchThreshold: s.misMatchThreshold ?? data.misMatchThreshold ?? 0.1,
-      postInteractionWait: s.postInteractionWait ?? data.postInteractionWait ?? 1,
-    };
-
-    const scenario = createScenario(opts);
-    scenarios.push(scenario);
-  });
 }
 
-export const config: Config = {
-  id: testSuite,
-  viewports,
-  onBeforeScript: getScriptPath('/onBefore.js', engine),
-  onReadyScript: getScriptPath('/onReady.js', engine),
-  scenarios,
-  paths: {
-    bitmaps_reference: '.backstop/' + testSuite + '/bitmaps_reference',
-    bitmaps_test: '.backstop/' + testSuite + '/bitmaps_test',
-    engine_scripts: `${getLibraryPath()}/.engine_scripts`,
-    html_report: '.backstop/' + testSuite + '/html_report',
-    ci_report: '.backstop/' + testSuite + '/ci_report',
-  },
-  report: [isRef ? 'CI' : 'browser'],
-  engine,
-  engineOptions: {
-    args: [
-      '--disable-infobars',
-      '--disable-setuid-sandbox',
-      '--ignore-certifcate-errors',
-      '--ignore-certifcate-errors-spki-list',
-      '--no-sandbox',
-      '--window-position=0,0',
-    ],
-    browser: data?.browser ?? 'chromium',
-  },
-  asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
-  asyncCompareLimit: data?.asyncCompareLimit ?? 50,
-  debug: false,
-  debugWindow: data?.debug,
-};
+function getScenarios(args: string[], testSuite: string, isRef: boolean, globalRequiredLogin: boolean) {
+  const scenarios: Scenario[] = [];
 
-export default config;
+  const data = getData(testSuite);
+
+  const viewports = parseDataFromFile(data?.viewportsPath ?? 'visual_tests/_viewports.yaml') as ViewportNext[];
+  if (data) {
+    [].forEach.call(data.scenarios, (s: ScenarioModel) => {
+      expandScenarios(s, data.scenarios, 0);
+    });
+
+    const getTestUrlLocal = (url: string) => getTestUrl(args, url, isRef);
+
+    const pad = String(data?.scenarios.length).length;
+    data.scenarios.forEach((s, index) => {
+      const opts: ScenarioModel = {
+        ...s,
+        requiredLogin: globalRequiredLogin || s.requiredLogin,
+        getTestUrl: getTestUrlLocal,
+        url: isRef ? s.url : getTestUrl(args, s.url, isRef),
+        index: String(index + 1).padStart(pad, ' '),
+        total: data.scenarios.length,
+        delay: s.delay ?? 1000,
+        hideSelectors: s.hideSelectors ?? data.hideSelectors,
+        removeSelectors: s.removeSelectors ?? data.removeSelectors,
+        useCssOverride: s.useCssOverride ?? data.useCssOverride,
+        jsOnReadyPath: s.jsOnReadyPath,
+        viewports: !!s.viewportNames
+          ? typeof s.viewportNames === 'string'
+            ? viewports.filter((v) => v.label.toLowerCase() == (s.viewportNames as string).trim().toLowerCase())
+            : viewports.filter((v) => s.viewportNames?.includes(v.label))
+          : !!data.viewportNames
+          ? typeof data.viewportNames === 'string'
+            ? viewports.filter((v) => v.label.toLowerCase() == (data.viewportNames as string).trim().toLowerCase())
+            : viewports.filter((v) => data.viewportNames?.includes(v.label))
+          : undefined,
+        referenceUrl: !isRef ? s.url : undefined,
+        misMatchThreshold: s.misMatchThreshold ?? data.misMatchThreshold ?? 0.1,
+        postInteractionWait: s.postInteractionWait ?? data.postInteractionWait ?? 1,
+      };
+
+      const scenario = createScenario(opts);
+      scenarios.push(scenario);
+    });
+  }
+
+  return { scenarios, data, viewports };
+}
+
+export function getConfig(args: string[]): Config {
+  const { testSuite, isRef, globalRequiredLogin } = getArgConfig(args);
+  const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin);
+
+  return {
+    id: testSuite,
+    viewports,
+    onBeforeScript: getScriptPath('/onBefore.js', engine),
+    onReadyScript: getScriptPath('/onReady.js', engine),
+    scenarios,
+    paths: {
+      bitmaps_reference: '.backstop/' + testSuite + '/bitmaps_reference',
+      bitmaps_test: '.backstop/' + testSuite + '/bitmaps_test',
+      engine_scripts: `${getLibraryPath()}/.engine_scripts`,
+      html_report: '.backstop/' + testSuite + '/html_report',
+      ci_report: '.backstop/' + testSuite + '/ci_report',
+    },
+    report: [isRef ? 'CI' : 'browser'],
+    engine,
+    engineOptions: {
+      args: [
+        '--disable-infobars',
+        '--disable-setuid-sandbox',
+        '--ignore-certifcate-errors',
+        '--ignore-certifcate-errors-spki-list',
+        '--no-sandbox',
+        '--window-position=0,0',
+      ],
+      browser: data?.browser ?? 'chromium',
+    },
+    asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
+    asyncCompareLimit: data?.asyncCompareLimit ?? 50,
+    debug: false,
+    debugWindow: data?.debug,
+  } as Config;
+}

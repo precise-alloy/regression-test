@@ -5,12 +5,10 @@ import YAML from 'js-yaml';
 import { getLibraryPath, getStringArg } from './helpers.js';
 import slash from 'slash';
 
-const libraryPath = getLibraryPath();
-
-const getReplacementProfile = (): ReplacementModel[] | undefined => {
-  const replacementProfileName = getStringArg('replacement-profile') ?? process.env.REPLACEMENT_PROFILE;
+function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {
+  const replacementProfileName = getStringArg(args, 'replacement-profile') ?? process.env.REPLACEMENT_PROFILE;
   if (!!replacementProfileName) {
-    const replacementProfilePath = slash(path.join(libraryPath, 'visual_tests', '_replacement-profiles.yaml'));
+    const replacementProfilePath = slash(path.join(getLibraryPath(), 'visual_tests', '_replacement-profiles.yaml'));
     if (!fs.existsSync(replacementProfilePath)) {
       throw "Replacement profile doesn't exist: " + replacementProfilePath;
     }
@@ -18,11 +16,11 @@ const getReplacementProfile = (): ReplacementModel[] | undefined => {
     const profiles = YAML.load(fs.readFileSync(replacementProfilePath, 'utf-8')) as ReplacementsModel;
     return profiles.profiles[replacementProfileName];
   }
-};
+}
 
-const replacementProfile = getReplacementProfile();
+export const getTestUrl = (args: string[], url: string, isRef: boolean) => {
+  const replacementProfile = getReplacementProfile(args);
 
-export const getTestUrl = (url: string, isRef: boolean) => {
   if (isRef || !replacementProfile) {
     return url;
   }

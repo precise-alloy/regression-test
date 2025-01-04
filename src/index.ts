@@ -1,51 +1,54 @@
-import chalk from 'chalk';
-import backstop from 'backstopjs';
-import config from './config.js';
-import { getLibraryPath, getStringArg } from './helpers.js';
-import path from 'path';
-import fs from 'fs';
+#!/usr/bin/env node
 
-const command = getStringArg('--command') as 'approve' | 'init' | 'reference' | 'test' | undefined;
-if (!command) {
-  throw '`command` must be set';
+import { exec } from 'child_process';
+import chalk from 'chalk';
+import { getLibraryPath } from './helpers';
+import { initRegressify } from './initialization/init';
+import { regressifyProcess } from './regressify';
+import { exit } from 'process';
+
+const libraryPath = getLibraryPath();
+
+function runCommand(command: string) {
+  const childProcess = exec(command, { env: { ...process.env, FORCE_COLOR: '1' } });
+
+  if (childProcess) {
+    if (childProcess.stdout) {
+      childProcess.stdout.on('data', (data) => {
+        process.stdout.write(data);
+      });
+    }
+
+    if (childProcess.stderr) {
+      childProcess.stderr.on('data', (data) => {
+        process.stderr.write(data);
+      });
+    }
+
+    childProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.log(chalk.red(`Command exited with code ${code}`));
+      }
+    });
+  }
+
+  childProcess.on('error', (err) => {
+    console.log(chalk.red(`Failed to start command: ${err.message}`));
+  });
 }
 
-const PATCH_START = '<!-- PATCH START -->';
-const PATCH_END = '<!-- PATCH END -->';
+const args = process.argv.slice(2);
+const command = args[0].toLowerCase();
 
-const customStyle = `
-${PATCH_START}
-<style>
-  [id^="test"] > div[display="true"] > p[display] {
-    white-space: pre;
-    overflow-x: auto;
-  }
-</style>
-${PATCH_END}
-`;
-
-const packCompare = () => {
-  const reportIndex = path.resolve(getLibraryPath(), 'node_modules/backstopjs/compare/output/index.html');
-  if (fs.existsSync(reportIndex)) {
-    let html = fs.readFileSync(reportIndex, 'utf-8');
-    const patchStartIndex = html.indexOf(PATCH_START);
-    const patchEndIndex = html.indexOf(PATCH_END);
-    if (patchStartIndex > 0 && patchEndIndex > patchStartIndex) {
-      html = html.replace(new RegExp(PATCH_START + '.*' + patchEndIndex, 'gi'), customStyle);
-    } else {
-      html = html.replace('</head>', customStyle + '</head>');
-    }
-    fs.writeFileSync(reportIndex, html);
-  } else {
-    console.log(chalk.red('File does not exist: ' + reportIndex));
-  }
-};
-
-packCompare();
-backstop(command, { config })
-  .then(() => {
-    console.log(chalk.green(command.toUpperCase() + ' FINISHED SUCCESSFULLY'));
-  })
-  .catch(() => {
-    console.log(chalk.red(command.toUpperCase() + ' FAILED'));
-  });
+if (command === 'init') {
+  await initRegressify();
+} else if (command === 'ref') {
+  await regressifyProcess('test', ['--ref', ...args.slice(1)]);
+} else if (command === 'approve') {
+  await regressifyProcess('approve', args.slice(1));
+} else if (command === 'test') {
+  await regressifyProcess('test', args.slice(1));
+} else {
+  console.log(chalk.red("Invalid command. Use one of the following: 'regressify init' 'regressify ref', 'regressify approve', 'regressify test'."));
+  exit(1);
+}

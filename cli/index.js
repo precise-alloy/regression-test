@@ -34,7 +34,7 @@ function runCommand(command) {
 const args = process.argv.slice(2);
 const command = args[0].toLowerCase();
 
-let commandBase = `node ${libraryPath}/dist/index.js`;
+let commandBase = `node ${libraryPath}/src/index.js`;
 
 if (command === 'init') {
   const postInstallPath = slash(pathToFileURL(path.join(libraryPath, 'cli', 'generate-tests.js')));

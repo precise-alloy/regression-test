@@ -36,7 +36,7 @@ function runCommand(command) {
 const args = process.argv.slice(2);
 const command = args[0].toLowerCase();
 
-let commandBase = `tsx ${getLibraryPath()}/src/index.ts`;
+let commandBase = `node ${getLibraryPath()}/dist/index.js`;
 
 if (command === 'init') {
   const __filename = fileURLToPath(import.meta.url);

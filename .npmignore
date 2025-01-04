@@ -4,12 +4,12 @@
 .github
 .vscode
 
-common
+common/
 !common/_cookies.yaml
 !common/_on-ready.js
 !common/_override.css
 !common/_cookies.yaml
 !common/_viewports.yaml
 
-visual_tests
+visual_tests/
 !visual_tests/alloy.tests.yaml

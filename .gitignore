@@ -1,6 +1,7 @@
 node_modules/
 backstop_data/
 .backstop/
-src/*.js
-src/*.d.ts
-src/*.map
+src/**/*.js
+src/**/*.d.ts
+src/**/*.map
+*.tsbuildinfo

@@ -4,12 +4,10 @@ import path, { dirname } from 'path';
 import { exec } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import chalk from 'chalk';
+import { getLibraryPath } from './cli/helpers';
 import slash from 'slash';
 
-function getLibraryPath() {
-  const fileName = fileURLToPath(import.meta.url);
-  return slash(dirname(fileName));
-}
+const libraryPath = getLibraryPath();
 
 function runCommand(command) {
   const childProcess = exec(command, { env: { ...process.env, FORCE_COLOR: '1' } });
@@ -36,13 +34,10 @@ function runCommand(command) {
 const args = process.argv.slice(2);
 const command = args[0].toLowerCase();
 
-let commandBase = `node ${getLibraryPath()}/dist/index.js`;
+let commandBase = `node ${libraryPath}/dist/index.js`;
 
 if (command === 'init') {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-
-  const postInstallPath = pathToFileURL(path.join(__dirname, 'cli', 'generate-tests.js'));
+  const postInstallPath = slash(pathToFileURL(path.join(libraryPath, 'cli', 'generate-tests.js')));
   if (fs.existsSync(postInstallPath)) {
     console.log(chalk.yellow('Generate folder visual_tests ...'));
     await import(postInstallPath);
@@ -50,7 +45,7 @@ if (command === 'init') {
     console.log(chalk.red('generate-tests.js not found!'));
   }
 
-  const updatePackageJsonPath = pathToFileURL(path.join(__dirname, 'cli', 'update-package.js'));
+  const updatePackageJsonPath = slash(pathToFileURL(path.join(libraryPath, 'cli', 'update-package.js')));
   if (fs.existsSync(updatePackageJsonPath)) {
     console.log(chalk.yellow('Update package.json ...'));
     await import(updatePackageJsonPath);

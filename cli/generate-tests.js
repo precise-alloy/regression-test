@@ -1,13 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import pkg from 'ncp';
 import chalk from 'chalk';
+import { getLibraryPath } from './helpers';
+import slash from 'slash';
 
 const { ncp } = pkg;
 
-async function askUser() {
-  const sourceFolder = path.join(path.dirname(fileURLToPath(import.meta.url)), 'visual_tests');
+async function initVisualTestsFolder() {
+  const sourceFolder = slash(path.join(getLibraryPath(), 'visual_tests'));
   const destinationFolder = path.join(process.cwd(), 'visual_tests');
 
   if (!fs.existsSync(destinationFolder)) {
@@ -23,4 +24,4 @@ async function askUser() {
   }
 }
 
-askUser().catch((err) => console.error('Error:', err));
+initVisualTestsFolder().catch((err) => console.error('Error:', err));

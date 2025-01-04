@@ -5,11 +5,7 @@ on:
     branches:
       - release
     paths:
-      - .engine_scripts/**
-      - cli/**
-      - src/**
       - package.json
-      - cli.js
 
   workflow_dispatch:
 

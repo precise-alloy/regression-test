@@ -3,16 +3,15 @@ import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
 import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
-import { fileURLToPath } from 'url';
 import { TestSuiteModel, ScenarioModel } from './types.js';
 import chalk from 'chalk';
 import { exit } from 'process';
 import YAML from 'js-yaml';
 import { getTestUrl } from './replacements.js';
 
+const libraryPath = getLibraryPath();
 const engine: 'puppeteer' | 'playwright' = 'playwright';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const testSuite = getStringArg('--test-suite');
 const isRef = getFlagArg('--ref');
 const globalRequiredLogin = getFlagArg('--requiredLogin');
@@ -23,7 +22,7 @@ if (globalRequiredLogin) {
 const scenarios: Scenario[] = [];
 
 const getScriptPath = (scriptPath: string, engine: 'puppeteer' | 'playwright') => {
-  return path.join(__dirname, '..', '.engine_scripts', (engine == 'puppeteer' ? 'puppet' : 'playwright') + scriptPath);
+  return path.join(libraryPath, '.engine_scripts', (engine == 'puppeteer' ? 'puppet' : 'playwright') + scriptPath);
 };
 
 if (!testSuite) {

@@ -2,15 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import { ReplacementModel, ReplacementsModel } from './types';
 import YAML from 'js-yaml';
-import { getStringArg } from './helpers.js';
-import { fileURLToPath } from 'url';
+import { getLibraryPath, getStringArg } from './helpers.js';
+import slash from 'slash';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const libraryPath = getLibraryPath();
 
 const getReplacementProfile = (): ReplacementModel[] | undefined => {
   const replacementProfileName = getStringArg('replacement-profile') ?? process.env.REPLACEMENT_PROFILE;
   if (!!replacementProfileName) {
-    const replacementProfilePath = path.resolve(__dirname, '../visual_tests/_replacement-profiles.yaml');
+    const replacementProfilePath = slash(path.join(libraryPath, 'visual_tests', '_replacement-profiles.yaml'));
     if (!fs.existsSync(replacementProfilePath)) {
       throw "Replacement profile doesn't exist: " + replacementProfilePath;
     }

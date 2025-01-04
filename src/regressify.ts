@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import backstop from 'backstopjs';
-import { getLibraryPath, getStringArg } from './helpers.js';
+import { getLibraryPath } from './helpers.js';
 import path from 'path';
 import fs from 'fs';
 import { getConfig } from './config.js';

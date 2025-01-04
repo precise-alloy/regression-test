@@ -1,4 +1,4 @@
-import { ScenarioModel } from './types';
+import { ScenarioModel } from './types.js';
 
 export const createScenario = (opts: ScenarioModel): ScenarioModel => {
   const parsedUrl = new URL(opts.url);

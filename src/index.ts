@@ -2,9 +2,9 @@
 
 import { exec } from 'child_process';
 import chalk from 'chalk';
-import { getLibraryPath } from './helpers';
-import { initRegressify } from './initialization/init';
-import { regressifyProcess } from './regressify';
+import { getLibraryPath } from './helpers.js';
+import { initRegressify } from './initialization/init.js';
+import { regressifyProcess } from './regressify.js';
 import { exit } from 'process';
 
 const libraryPath = getLibraryPath();

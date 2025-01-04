@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ReplacementModel, ReplacementsModel } from './types';
+import { ReplacementModel, ReplacementsModel } from './types.js';
 import YAML from 'js-yaml';
 import { getLibraryPath, getStringArg } from './helpers.js';
 import slash from 'slash';

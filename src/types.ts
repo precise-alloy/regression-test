@@ -24,6 +24,7 @@ export interface TestSuiteModel {
   misMatchThreshold?: number;
   postInteractionWait?: number;
   viewportNames?: string | string[];
+  ignoreSslErrors?: boolean;
 }
 
 export interface ScenarioModel extends Scenario {

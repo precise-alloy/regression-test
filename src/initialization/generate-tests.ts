@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { mkdirSync } from 'fs';
 import path from 'path';
 import pkg from 'ncp';
 import chalk from 'chalk';
@@ -22,6 +22,17 @@ export async function initCommonFolder() {
       });
     } else {
       console.log(chalk.yellow('Folder "common" already exists.'));
+    }
+
+    const requiredFiles = ['test-schema.json', 'replacement-profiles-schema.json'];
+
+    for (const file of requiredFiles) {
+      const source = slash(path.join(sourceFolder, file));
+      const destination = slash(path.join(destinationFolder, file));
+
+      if (fs.existsSync(source)) {
+        fs.copyFileSync(source, destination);
+      }
     }
   } catch (error) {
     console.log(chalk.red(error));

@@ -155,7 +155,7 @@ export function getConfig(args: string[]): Config {
   const { testSuite, isRef, globalRequiredLogin } = getArgConfig(args);
   const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin);
 
-  return {
+  const config = {
     id: testSuite,
     viewports,
     onBeforeScript: getScriptPath('/onBefore.js', engine),
@@ -186,4 +186,10 @@ export function getConfig(args: string[]): Config {
     debug: false,
     debugWindow: data?.debug,
   } as Config;
+
+  if (data?.ignoreSslErrors) {
+    config.engineOptions!.args.push('--ignore-certificate-errors');
+  }
+
+  return config;
 }

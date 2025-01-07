@@ -75,6 +75,9 @@
         },
         "postInteractionWait": {
           "type": "number"
+        },
+        "ignoreSslErrors": {
+          "type": "boolean"
         }
       },
       "required": [

@@ -177,7 +177,6 @@ export function getConfig(args: string[]): Config {
         '--ignore-certifcate-errors',
         '--ignore-certifcate-errors-spki-list',
         '--no-sandbox',
-        '--disable-setuid-sandbox',
         '--window-position=0,0',
       ],
       browser: data?.browser ?? 'chromium',

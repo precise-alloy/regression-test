@@ -45,7 +45,7 @@ function patchVsCodeSettings() {
 
     settings['files.exclude'] = settings['files.exclude'] || {};
     settings['files.exclude']['common/test-schema.json'] = true;
-    settings['files.exclude']['replacement-profiles-schema.json'] = true;
+    settings['files.exclude']['common/replacement-profiles-schema.json'] = true;
     settings['files.exclude']['.vscode'] = true;
     settings['files.exclude']['**/node_modules'] = true;
     settings['files.exclude']['.idea'] = true;

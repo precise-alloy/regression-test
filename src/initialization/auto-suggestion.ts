@@ -48,6 +48,7 @@ function patchVsCodeSettings() {
     settings['files.exclude']['common/test-schema.json'] = true;
     settings['files.exclude']['replacement-profiles-schema.json'] = true;
 
+    fs.mkdirSync(path.join(process.cwd(), '.vscode'), { recursive: true });
     fs.writeFileSync(settingsJsonPath, JSON.stringify(settings, null, 2));
   } catch (error) {
     console.log(chalk.red(error));

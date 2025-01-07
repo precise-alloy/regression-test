@@ -180,16 +180,13 @@ export function getConfig(args: string[]): Config {
         '--window-position=0,0',
       ],
       browser: data?.browser ?? 'chromium',
+      ignoreHTTPSErrors: data?.ignoreSslErrors,
     },
     asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
     asyncCompareLimit: data?.asyncCompareLimit ?? 50,
     debug: false,
     debugWindow: data?.debug,
   } as Config;
-
-  if (data?.ignoreSslErrors) {
-    config.engineOptions!.args.push('--ignore-certificate-errors');
-  }
 
   return config;
 }

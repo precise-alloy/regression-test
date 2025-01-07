@@ -1,8 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import slash from 'slash';
-import { getLibraryPath } from '../helpers.js';
 
 type JsonSchema = {
   fileMatch: string[];

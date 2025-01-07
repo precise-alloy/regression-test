@@ -38,8 +38,8 @@ function patchVsCodeSettings() {
     settings['yaml.schemas'] = settings['yaml.schemas'] || {};
     settings['yaml.schemas'] = {
       ...settings['yaml.schemas'],
-      './.common/test-schema.json': '/*.tests.{yaml,yml}',
-      './.common/replacement-profiles-schema.json': '/_replacement-profiles.{yaml,yml}',
+      './common/test-schema.json': '/*.tests.{yaml,yml}',
+      './common/replacement-profiles-schema.json': '/_replacement-profiles.{yaml,yml}',
     };
 
     settings['files.exclude'] = settings['files.exclude'] || {};

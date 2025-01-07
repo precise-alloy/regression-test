@@ -17,7 +17,7 @@ type Settings = {
   'files.exclude'?: Record<string, boolean>;
 };
 
-export async function autoSuggestion() {
+export async function addAutoSuggestion() {
   patchVsCodeSettings();
 }
 

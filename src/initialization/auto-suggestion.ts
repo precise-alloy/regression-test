@@ -21,7 +21,8 @@ export async function addAutoSuggestion() {
 
 function patchVsCodeSettings() {
   try {
-    const settingsJsonPath = path.join(process.cwd(), '.vscode', 'settings.json');
+    const vsCodeFolder = path.join(process.cwd(), '.vscode');
+    const settingsJsonPath = path.join(vsCodeFolder, 'settings.json');
     const json = fs.existsSync(settingsJsonPath) ? fs.readFileSync(settingsJsonPath, 'utf8') : '{}';
     const settings = JSON.parse(json) as Settings;
 
@@ -49,7 +50,9 @@ function patchVsCodeSettings() {
     settings['files.exclude']['**/node_modules'] = true;
     settings['files.exclude']['.idea'] = true;
 
-    fs.mkdirSync(path.join(process.cwd(), '.vscode'), { recursive: true });
+    if (!fs.existsSync(vsCodeFolder)) {
+      fs.mkdirSync(vsCodeFolder, { recursive: true });
+    }
     fs.writeFileSync(settingsJsonPath, JSON.stringify(settings, null, 2));
   } catch (error) {
     console.log(chalk.red(error));

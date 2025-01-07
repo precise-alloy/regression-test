@@ -10,6 +10,9 @@ common/**/*
 !common/_override.css
 !common/_cookies.yaml
 !common/_viewports.yaml
+!common/_replacement-profiles.yaml
+!common/replacement-profiles-schema.json
+!common/test-schema.json
 
 visual_tests/**/*
 !visual_tests/alloy.tests.yaml

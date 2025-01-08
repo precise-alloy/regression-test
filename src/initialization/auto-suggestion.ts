@@ -13,6 +13,7 @@ type Settings = {
   'json.schemas'?: JsonSchema[];
   'yaml.schemas'?: YamlSchema;
   'files.exclude'?: Record<string, boolean>;
+  'yaml.schemaStore.enable'?: boolean;
 };
 
 export async function addAutoSuggestion() {
@@ -49,6 +50,8 @@ function patchVsCodeSettings() {
     settings['files.exclude']['.vscode'] = true;
     settings['files.exclude']['**/node_modules'] = true;
     settings['files.exclude']['.idea'] = true;
+
+    settings['yaml.schemaStore.enable'] = false;
 
     if (!fs.existsSync(vsCodeFolder)) {
       fs.mkdirSync(vsCodeFolder, { recursive: true });

@@ -19,7 +19,7 @@ module.exports = async (browserContext, scenario) => {
   }
 
   // Add cookies to browser
-  browserContext.addCookies(cookies);
+  await browserContext.addCookies(cookies);
 
   // console.log('Cookie state restored with:', JSON.stringify(cookies, null, 2));
   console.log(logPrefix + 'Cookie state restored for: ' + scenario.label);

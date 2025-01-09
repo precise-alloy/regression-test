@@ -1,4 +1,4 @@
-import fs, { mkdirSync } from 'fs';
+import fs from 'fs';
 import path, { basename } from 'path';
 import chalk from 'chalk';
 import slash from 'slash';
@@ -8,6 +8,7 @@ export async function migrate() {
     const oldDataFolder = slash(path.join(process.cwd(), 'data'));
     const commonFolder = path.join(process.cwd(), 'common');
     const visualTestsFolder = path.join(process.cwd(), 'visual_tests');
+    const engineScriptsFolder = path.join(process.cwd(), '.engine_scripts');
 
     if (fs.existsSync(oldDataFolder)) {
       const files = fs.readdirSync(oldDataFolder);
@@ -30,6 +31,10 @@ export async function migrate() {
       }
 
       fs.rmdirSync(oldDataFolder, { recursive: true });
+    }
+
+    if (fs.existsSync(engineScriptsFolder)) {
+      fs.rmdirSync(engineScriptsFolder, { recursive: true });
     }
   } catch (error) {
     console.log(chalk.red(error));

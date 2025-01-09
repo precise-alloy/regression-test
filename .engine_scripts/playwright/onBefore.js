@@ -14,7 +14,7 @@ module.exports = async (page, scenario, viewport, isReference, browserContext) =
   await require('./loadCookies')(browserContext, scenario);
 
   if (scenario.restore) {
-    console.log(logPrefix + 'restore:', scenario.restore);
+    console.log('restore:', scenario.restore);
     const states = getStorageState(scenario.restore);
     await browserContext.storageState(states);
   }

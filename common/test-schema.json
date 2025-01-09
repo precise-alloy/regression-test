@@ -76,6 +76,9 @@
         "postInteractionWait": {
           "type": "number"
         },
+        "restore": {
+          "type": "string"
+        },
         "ignoreSslErrors": {
           "type": "boolean"
         }

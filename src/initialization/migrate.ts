@@ -27,6 +27,8 @@ export async function migrate() {
           fs.copyFileSync(file, destination);
         }
       }
+
+      fs.rmdirSync(oldDataFolder, { recursive: true });
     }
   } catch (error) {
     console.log(chalk.red(error));

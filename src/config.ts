@@ -149,6 +149,11 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
         postInteractionWait: s.postInteractionWait ?? data.postInteractionWait ?? 1,
       };
 
+      if (opts.restore && Array.isArray(opts.restore)) {
+        // Deduplicate restore array
+        opts.restore = opts.restore.filter((value, index, self) => self.indexOf(value) === index);
+      }
+
       const scenario = createScenario(opts);
       scenarios.push(scenario);
     });

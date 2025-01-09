@@ -61,12 +61,14 @@ function patchVsCodeSettings() {
       './common/replacement-profiles-schema.json': '/_replacement-profiles.{yaml,yml}',
     };
 
-    settings['files.exclude'] = settings['files.exclude'] || {};
-    settings['files.exclude']['common/test-schema.json'] = true;
-    settings['files.exclude']['common/replacement-profiles-schema.json'] = true;
-    settings['files.exclude']['.vscode'] = true;
-    settings['files.exclude']['**/node_modules'] = true;
-    settings['files.exclude']['.idea'] = true;
+    const filesExclude = settings['files.exclude'] || {};
+    filesExclude['common/test-schema.json'] = true;
+    filesExclude['common/replacement-profiles-schema.json'] = true;
+    filesExclude['.vscode'] = true;
+    filesExclude['**/node_modules'] = true;
+    filesExclude['.idea'] = true;
+
+    settings['files.exclude'] = filesExclude;
 
     settings['yaml.schemaStore.enable'] = false;
 

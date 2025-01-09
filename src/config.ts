@@ -187,7 +187,7 @@ export function getConfig(args: string[]): Config {
       ],
       browser: data?.browser ?? 'chromium',
       ignoreHTTPSErrors: data && typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : true,
-      headless: 'new',
+      headless: data?.debug ? undefined : 'new',
     },
     asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
     asyncCompareLimit: data?.asyncCompareLimit ?? 50,

@@ -20,7 +20,7 @@ module.exports = async (page, scenario, viewport, isReference, browserContext) =
     const stateNames = typeof scenario.restore === 'string' ? [scenario.restore] : scenario.restore;
 
     for (const stateName of stateNames) {
-      console.log(logPrefix + 'restore:', stateName);
+      console.log(logPrefix + 'Restore:', stateName);
       const states = getStorageState(stateName);
       await browserContext.storageState(states);
     }

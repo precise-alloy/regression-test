@@ -178,12 +178,6 @@ module.exports = async (context) => {
       const states = await browserContext.storageState();
       fs.writeFileSync(getStatePath(), JSON.stringify(states, null, 2));
     }
-
-    if (action.restore) {
-      console.log(logPrefix + 'restore:', action.restore);
-      const states = JSON.parse(getStatePath(), 'utf8');
-      await browserContext.storageState(states);
-    }
   }
 };
 

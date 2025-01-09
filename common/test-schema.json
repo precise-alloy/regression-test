@@ -160,6 +160,9 @@
         "noScrollTop": {
           "type": "boolean"
         },
+        "restore": {
+          "type": "string"
+        },
         "actions": {
           "type": "array",
           "items": {
@@ -181,6 +184,9 @@
               },
               {
                 "$ref": "#/definitions/InputFileAction"
+              },
+              {
+                "$ref": "#/definitions/PersitAction"
               },
               {
                 "$ref": "#/definitions/PressAction"
@@ -633,28 +639,6 @@
       "additionalProperties": false,
       "properties": {
         "persit": {
-          "type": "string"
-        },
-        "frame": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
-        }
-      }
-    },
-    "RestoreAction": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "restore": {
           "type": "string"
         },
         "frame": {

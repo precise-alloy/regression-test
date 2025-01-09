@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const YAML = require('js-yaml');
+const chalkImport = import('chalk').then((m) => m.default);
 
 function getStorageState(stateName) {
   const statePath = path.join(process.cwd(), 'states', `${stateName}.yaml`);
@@ -11,12 +12,17 @@ function getStorageState(stateName) {
 }
 
 module.exports = async (page, scenario, viewport, isReference, browserContext) => {
+  const chalk = await chalkImport;
   const logPrefix = chalk.yellow(`[${scenario.index} of ${scenario.total}] `);
   await require('./loadCookies')(browserContext, scenario);
 
   if (scenario.restore) {
-    console.log(logPrefix + 'restore:', scenario.restore);
-    const states = getStorageState(scenario.restore);
-    await browserContext.storageState(states);
+    const stateNames = typeof scenario.restore === 'string' ? [scenario.restore] : scenario.restore;
+
+    for (const stateName of stateNames) {
+      console.log(logPrefix + 'restore:', stateName);
+      const states = getStorageState(stateName);
+      await browserContext.storageState(states);
+    }
   }
 };

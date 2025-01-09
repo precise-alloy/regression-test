@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const YAML = require('js-yaml');
 
 function getStorageState(stateName) {
-  const statePath = path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
+  const statePath = path.join(process.cwd(), 'states', `${stateName}.yaml`);
   if (fs.existsSync(statePath)) {
-    const json = fs.readFileSync(statePath, 'utf8');
-    return JSON.parse(json);
+    const yaml = fs.readFileSync(statePath, 'utf8');
+    return YAML.load(json);
   }
 }
 

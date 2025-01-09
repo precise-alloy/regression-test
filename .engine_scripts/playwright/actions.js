@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const YAML = require('js-yaml');
 const chalkImport = import('chalk').then((m) => m.default);
 
 module.exports = async (context) => {
@@ -182,11 +183,12 @@ module.exports = async (context) => {
 };
 
 function setStorageState(stateName, states) {
-  const statePath = path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
+  const statePath = path.join(process.cwd(), 'states', `${stateName}.yaml`);
   const parentDir = path.dirname(statePath);
   if (!fs.existsSync(parentDir)) {
     fs.mkdirSync(parentDir, { recursive: true });
   }
 
-  fs.writeFileSync(statePath, JSON.stringify(states, null, 2));
+  const yaml = YAML.dump(states, { lineWidth: -1, noCompatMode: true });
+  fs.writeFileSync(yaml, JSON.stringify(states, null, 2));
 }

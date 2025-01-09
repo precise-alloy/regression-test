@@ -199,7 +199,7 @@
                 "$ref": "#/definitions/InputFileAction"
               },
               {
-                "$ref": "#/definitions/PersitAction"
+                "$ref": "#/definitions/persistAction"
               },
               {
                 "$ref": "#/definitions/PressAction"
@@ -647,11 +647,11 @@
         "wait"
       ]
     },
-    "PersitAction": {
+    "persistAction": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "persit": {
+        "persist": {
           "type": "string"
         },
         "frame": {

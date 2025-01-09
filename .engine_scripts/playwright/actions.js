@@ -174,10 +174,10 @@ module.exports = async (context) => {
       }
     }
 
-    if (!!action.persit) {
-      console.log(logPrefix + 'persit:', action.persit);
+    if (!!action.persist) {
+      console.log(logPrefix + 'persist:', action.persist);
       const states = await browserContext.storageState();
-      setStorageState(action.persit, states);
+      setStorageState(action.persist, states);
     }
   }
 };

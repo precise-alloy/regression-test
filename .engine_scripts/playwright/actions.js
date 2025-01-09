@@ -182,5 +182,5 @@ module.exports = async (context) => {
 };
 
 function getStatePath(stateName) {
-  return process.cwd() + `/states/storage-states--${stateName}.json`;
+  return path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
 }

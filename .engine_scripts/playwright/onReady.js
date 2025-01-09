@@ -1,9 +1,10 @@
+const path = require('path');
 const autoScroll = require('../auto-scroll');
 const scrollTop = require('../scroll-top');
 const chalkImport = import('chalk').then((m) => m.default);
 
 function getStatePath(stateName) {
-  return process.cwd() + `/states/storage-states--${stateName}.json`;
+  return path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
 }
 
 module.exports = async (page, scenario, viewport, isReference, browserContext) => {

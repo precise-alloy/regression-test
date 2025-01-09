@@ -1,6 +1,6 @@
 {
   "name": "regressify",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "Visual regression tests support",
   "main": "src/index.ts",
   "type": "module",
@@ -40,6 +40,6 @@
     "@types/ncp": "^2.0.8",
     "@types/node": "^22.10.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
   }
 }

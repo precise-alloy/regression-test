@@ -6,7 +6,7 @@ function getStorageState(stateName) {
   const statePath = path.join(process.cwd(), 'states', `${stateName}.yaml`);
   if (fs.existsSync(statePath)) {
     const yaml = fs.readFileSync(statePath, 'utf8');
-    return YAML.load(json);
+    return YAML.load(yaml);
   }
 }
 

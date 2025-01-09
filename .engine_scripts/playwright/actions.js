@@ -190,5 +190,5 @@ function setStorageState(stateName, states) {
   }
 
   const yaml = YAML.dump(states, { lineWidth: -1, noCompatMode: true });
-  fs.writeFileSync(yaml, JSON.stringify(states, null, 2));
+  fs.writeFileSync(statePath, yaml);
 }

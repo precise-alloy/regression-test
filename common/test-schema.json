@@ -79,12 +79,14 @@
         "restore": {
           "oneOf": [
             {
-              "type": "string"
+              "type": "string",
+              "pattern": "^[a-z0-9_-]+$"
             },
             {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+$"
               }
             }
           ]
@@ -155,17 +157,20 @@
           ]
         },
         "id": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
         },
         "needs": {
           "oneOf": [
             {
-              "type": "string"
+              "type": "string",
+              "pattern": "^[a-z0-9_-]+$"
             },
             {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+$"
               }
             }
           ]
@@ -662,7 +667,8 @@
       "additionalProperties": false,
       "properties": {
         "persist": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
         },
         "frame": {
           "oneOf": [

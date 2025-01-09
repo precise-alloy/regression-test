@@ -22,7 +22,11 @@ module.exports = async (page, scenario, viewport, isReference, browserContext) =
     for (const stateName of stateNames) {
       console.log(logPrefix + 'Restore:', stateName);
       const states = getStorageState(stateName);
-      await browserContext.storageState(states);
+      if (states) {
+        await browserContext.storageState(states);
+      } else {
+        console.error(logPrefix + 'State not found:', stateName);
+      }
     }
   }
 };

@@ -14,17 +14,18 @@ export async function migrate() {
 
       for (const file of files) {
         const fileName = basename(file);
+        const source = slash(path.join(oldDataFolder, fileName));
 
         if (
           ['_cookies.yaml', '_on-ready.js', '_override.css', '_replacement-profiles.yaml', '_signing-in.yaml', '_viewports.yaml'].includes(fileName)
         ) {
           const destination = slash(path.join(commonFolder, fileName));
 
-          fs.copyFileSync(file, destination);
+          fs.copyFileSync(source, destination);
         } else {
           const destination = slash(path.join(visualTestsFolder, fileName));
 
-          fs.copyFileSync(file, destination);
+          fs.copyFileSync(source, destination);
         }
       }
 

@@ -28,17 +28,19 @@ function patchVsCodeSettings() {
     const settings = JSON.parse(json) as Settings;
 
     const jsonSchemas = settings['json.schemas'] || [];
-    const existingJsonSchema = jsonSchemas.find((js) => js.fileMatch.includes('/*.tests.json'));
+    let existingJsonSchema: JsonSchema | undefined;
 
-    if (!existingJsonSchema) {
-      jsonSchemas.push({
-        fileMatch: ['/*.tests.json'],
-        url: './common/test-schema.json',
-      });
-    } else {
-      existingJsonSchema.fileMatch = ['/*.tests.json'];
-      existingJsonSchema.url = './common/test-schema.json';
-    }
+    do {
+      jsonSchemas.find((js) => js.fileMatch && js.fileMatch.includes('/*.tests.json'));
+      if (existingJsonSchema) {
+        jsonSchemas.splice(jsonSchemas.indexOf(existingJsonSchema), 1);
+      }
+    } while (existingJsonSchema);
+
+    jsonSchemas.push({
+      fileMatch: ['/*.tests.json'],
+      url: './common/test-schema.json',
+    });
 
     settings['json.schemas'] = jsonSchemas;
 

@@ -176,11 +176,17 @@ module.exports = async (context) => {
     if (!!action.persit) {
       console.log(logPrefix + 'persit:', action.persit);
       const states = await browserContext.storageState();
-      fs.writeFileSync(getStatePath(action.persit), JSON.stringify(states, null, 2));
+      setStorageState(action.persit, states);
     }
   }
 };
 
-function getStatePath(stateName) {
-  return path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
+function setStorageState(stateName, states) {
+  const statePath = path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
+  const parentDir = path.dirname(statePath);
+  if (!fs.existsSync(parentDir)) {
+    fs.mkdirSync(parentDir, { recursive: true });
+  }
+
+  fs.writeFileSync(statePath, JSON.stringify(states, null, 2));
 }

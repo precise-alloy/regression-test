@@ -1,16 +1,21 @@
+const fs = require('fs');
 const path = require('path');
 const autoScroll = require('../auto-scroll');
 const scrollTop = require('../scroll-top');
 const chalkImport = import('chalk').then((m) => m.default);
 
-function getStatePath(stateName) {
-  return path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
+function getStorageState(stateName) {
+  const statePath = path.join(process.cwd(), 'states', `storage-states--${stateName}.json`);
+  if (fs.existsSync(statePath)) {
+    const json = fs.readFileSync(statePath, 'utf8');
+    return JSON.parse(json);
+  }
 }
 
 module.exports = async (page, scenario, viewport, isReference, browserContext) => {
   if (scenario.restore) {
-    console.log(logPrefix + 'restore:', action.restore);
-    const states = JSON.parse(getStatePath(), 'utf8');
+    console.log(logPrefix + 'restore:', scenario.restore);
+    const states = getStorageState(scenario.restore);
     await browserContext.storageState(states);
   }
 

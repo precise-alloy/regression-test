@@ -28,18 +28,33 @@ function patchVsCodeSettings() {
     const settings = JSON.parse(json) as Settings;
 
     const jsonSchemas = settings['json.schemas'] || [];
-    if (!jsonSchemas.some((js) => js.url === './common/test-schema.json')) {
+    const existingJsonSchema = jsonSchemas.find((js) => js.fileMatch.includes('/*.tests.json'));
+
+    if (!existingJsonSchema) {
       jsonSchemas.push({
         fileMatch: ['/*.tests.json'],
         url: './common/test-schema.json',
       });
+    } else {
+      existingJsonSchema.fileMatch = ['/*.tests.json'];
+      existingJsonSchema.url = './common/test-schema.json';
     }
 
     settings['json.schemas'] = jsonSchemas;
 
-    settings['yaml.schemas'] = settings['yaml.schemas'] || {};
+    const yamlSchema = settings['yaml.schemas'] || {};
+
+    // Check for each of `settings['yaml.schemas']`,
+    // if the key contains `test-schema.json` or `replacement-profiles-schema.json`,
+    // then remove it.
+    Object.keys(yamlSchema).forEach((key) => {
+      if (key.includes('test-schema.json') || key.includes('replacement-profiles-schema.json')) {
+        delete yamlSchema[key];
+      }
+    });
+
     settings['yaml.schemas'] = {
-      ...settings['yaml.schemas'],
+      ...yamlSchema,
       './common/test-schema.json': '/*.tests.{yaml,yml}',
       './common/replacement-profiles-schema.json': '/_replacement-profiles.{yaml,yml}',
     };

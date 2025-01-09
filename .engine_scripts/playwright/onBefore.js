@@ -11,10 +11,11 @@ function getStorageState(stateName) {
 }
 
 module.exports = async (page, scenario, viewport, isReference, browserContext) => {
+  const logPrefix = chalk.yellow(`[${scenario.index} of ${scenario.total}] `);
   await require('./loadCookies')(browserContext, scenario);
 
   if (scenario.restore) {
-    console.log('restore:', scenario.restore);
+    console.log(logPrefix + 'restore:', scenario.restore);
     const states = getStorageState(scenario.restore);
     await browserContext.storageState(states);
   }

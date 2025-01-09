@@ -627,6 +627,50 @@
       "required": [
         "wait"
       ]
+    },
+    "PersitAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "persit": {
+          "type": "string"
+        },
+        "frame": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "RestoreAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restore": {
+          "type": "string"
+        },
+        "frame": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
     }
   }
 }

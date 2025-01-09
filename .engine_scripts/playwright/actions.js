@@ -2,7 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const chalkImport = import('chalk').then((m) => m.default);
 
-module.exports = async (currentPage, scenario) => {
+module.exports = async (context) => {
+  const { currentPage, scenario, browserContext } = context;
+
   if (!scenario.actions) {
     return;
   }
@@ -170,5 +172,21 @@ module.exports = async (currentPage, scenario) => {
         await page.waitForSelector(action.wait);
       }
     }
+
+    if (action.persit) {
+      console.log(logPrefix + 'persit:', action.uncheck);
+      const states = await browserContext.storageState();
+      fs.writeFileSync(getStatePath(), JSON.stringify(states, null, 2));
+    }
+
+    if (action.restore) {
+      console.log(logPrefix + 'restore:', action.restore);
+      const states = JSON.parse(getStatePath(), 'utf8');
+      await browserContext.storageState(states);
+    }
   }
 };
+
+function getStatePath(stateName) {
+  return process.cwd() + `/states/storage-states--${stateName}.json`;
+}

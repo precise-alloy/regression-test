@@ -26,6 +26,7 @@ export interface TestSuiteModel {
   viewportNames?: string | string[];
   ignoreSslErrors?: boolean;
   state?: string;
+  restore?: string | string[];
 }
 
 export interface ScenarioModel extends Scenario {
@@ -44,4 +45,5 @@ export interface ScenarioModel extends Scenario {
   misMatchThreshold?: number;
   postInteractionWait?: number;
   state?: string;
+  restore?: string | string[];
 }

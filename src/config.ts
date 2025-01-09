@@ -126,6 +126,11 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
         total: data.scenarios.length,
         delay: s.delay ?? 1000,
         state: s.state ?? data.state,
+        restore: !data.restore
+          ? s.restore
+          : !s.restore
+          ? data.restore
+          : [...(typeof data.restore === 'string' ? [data.restore] : data.restore), ...(typeof s.restore === 'string' ? [s.restore] : s.restore)],
         hideSelectors: s.hideSelectors ?? data.hideSelectors,
         removeSelectors: s.removeSelectors ?? data.removeSelectors,
         useCssOverride: s.useCssOverride ?? data.useCssOverride,

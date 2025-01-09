@@ -31,7 +31,7 @@ module.exports = async (page, scenario, viewport, isReference, browserContext) =
   console.log(logPrefix + 'SCENARIO > ' + scenario.label);
 
   if (!!scenario.actions) {
-    await require('./actions')({ page, scenario, browserContext });
+    await require('./actions')({ currentPage: page, scenario, browserContext });
   } else {
     await require('./clickAndHoverHelper')(page, scenario);
   }

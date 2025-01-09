@@ -31,7 +31,7 @@ function patchVsCodeSettings() {
     let existingJsonSchema: JsonSchema | undefined;
 
     do {
-      jsonSchemas.find((js) => js.fileMatch && js.fileMatch.includes('/*.tests.json'));
+      existingJsonSchema = jsonSchemas.find((js) => js.fileMatch && js.fileMatch.includes('/*.tests.json'));
       if (existingJsonSchema) {
         jsonSchemas.splice(jsonSchemas.indexOf(existingJsonSchema), 1);
       }

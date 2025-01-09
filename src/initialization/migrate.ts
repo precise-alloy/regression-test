@@ -9,7 +9,7 @@ export async function migrate() {
     const commonFolder = path.join(process.cwd(), 'common');
     const visualTestsFolder = path.join(process.cwd(), 'visual_tests');
 
-    if (!fs.existsSync(oldDataFolder)) {
+    if (fs.existsSync(oldDataFolder)) {
       const files = fs.readdirSync(oldDataFolder);
 
       for (const file of files) {

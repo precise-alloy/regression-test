@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { ReplacementModel, ReplacementsModel } from './types.js';
 import YAML from 'js-yaml';
-import { getLibraryPath, getStringArg } from './helpers.js';
+import { getStringArg } from './helpers.js';
 import slash from 'slash';
 
 function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {

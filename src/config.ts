@@ -126,7 +126,7 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
         index: String(index + 1).padStart(pad, ' '),
         total: data.scenarios.length,
         delay: s.delay ?? 1000,
-        state: s.state ?? data.state,
+        state: data.state,
         hideSelectors: s.hideSelectors ?? data.hideSelectors,
         removeSelectors: s.removeSelectors ?? data.removeSelectors,
         useCssOverride: s.useCssOverride ?? data.useCssOverride,

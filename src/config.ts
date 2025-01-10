@@ -23,7 +23,7 @@ function getArgConfig(args: string[]) {
 
   if (!testSuite) {
     console.log(chalk.red('Argument `--test-suite` must be set.'));
-    console.log(chalk.red('Sample command: npm run <command> -- --test-suite <test-suite>'));
+    console.log(chalk.red('Sample command: regressify <command> --test-suite <test-suite>'));
     console.log(chalk.red('Command is either `ref`, `approve` or `test`.'));
     exit(1);
   }

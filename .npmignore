@@ -4,6 +4,8 @@
 .github
 .vscode
 
+assets/**/*
+
 common/**/*
 !common/_cookies.yaml
 !common/_on-ready.js

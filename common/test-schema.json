@@ -108,7 +108,8 @@
           "type": "string"
         },
         "label": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
         },
         "description": {
           "type": "string"

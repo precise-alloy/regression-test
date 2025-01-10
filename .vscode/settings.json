@@ -46,12 +46,12 @@
       "fileMatch": [
         "/*.tests.json"
       ],
-      "url": "./.engine_scripts/test-schema.json"
+      "url": "./common/test-schema.json"
     }
   ],
   "yaml.schemas": {
-    "./.engine_scripts/test-schema.json": "/*.tests.{yaml,yml}",
-    "./.engine_scripts/replacement-profiles-schema.json": "/_replacement-profiles.{yaml,yml}"
+    "./common/test-schema.json": "/*.tests.{yaml,yml}",
+    "./common/replacement-profiles-schema.json": "/_replacement-profiles.{yaml,yml}"
   },
   "git.branchValidationRegex": "^(main|master|develop|stage|fe-develop|fe-release|(features|bugfixes|infra|refactor)\\/.+)$"
 }

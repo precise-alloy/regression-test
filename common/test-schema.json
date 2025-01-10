@@ -76,7 +76,7 @@
         "postInteractionWait": {
           "type": "number"
         },
-        "restore": {
+        "state": {
           "oneOf": [
             {
               "type": "string",
@@ -177,19 +177,6 @@
         },
         "noScrollTop": {
           "type": "boolean"
-        },
-        "restore": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
         },
         "actions": {
           "type": "array",

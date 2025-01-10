@@ -197,7 +197,7 @@ export function getConfig(args: string[]): Config {
       browser: data?.browser ?? 'chromium',
       ignoreHTTPSErrors: data && typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : true,
       headless: data?.debug ? undefined : 'new',
-      storageState: data?.state ? getStatePath(data.state) : undefined,
+      storageState: data?.state && fs.existsSync(getStatePath(data.state)) ? getStatePath(data.state) : undefined,
     },
     asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
     asyncCompareLimit: data?.asyncCompareLimit ?? 50,

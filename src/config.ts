@@ -154,7 +154,7 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
         let persistActions = opts.actions.filter((a) => (a as PersistAction).persist) as PersistAction[];
         for (const persistAction of persistActions) {
           persistAction.path = getStatePath(persistAction.persist as string);
-          console.log('Persist action: ', persistAction);
+          // console.log('Persist action: ', persistAction);
         }
       }
 

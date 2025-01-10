@@ -4,3 +4,6 @@ profiles:
       test: https://new1.domain.com/
     - ref: https://legacy2.domain.com/
       test: https://new2.domain.com/
+    - ref: https:\/\/legacy3.domain.com\/(.*)\.aspx
+      test: https://new3.domain.com/$1
+      regex: true

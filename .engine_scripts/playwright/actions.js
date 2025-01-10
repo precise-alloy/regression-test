@@ -176,19 +176,7 @@ module.exports = async (context) => {
 
     if (!!action.persist) {
       console.log(logPrefix + 'persist:', action.persist);
-      const states = await browserContext.storageState();
-      setStorageState(action.persist, states);
+      await browserContext.storageState({ path: action.path });
     }
   }
 };
-
-function setStorageState(stateName, states) {
-  const statePath = path.join(process.cwd(), 'states', `${stateName}.yaml`);
-  const parentDir = path.dirname(statePath);
-  if (!fs.existsSync(parentDir)) {
-    fs.mkdirSync(parentDir, { recursive: true });
-  }
-
-  const yaml = YAML.dump(states, { lineWidth: -1, noCompatMode: true });
-  fs.writeFileSync(statePath, yaml);
-}

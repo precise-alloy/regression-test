@@ -3,11 +3,12 @@ import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
 import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
-import { TestSuiteModel, ScenarioModel } from './types.js';
+import { TestSuiteModel, ScenarioModel, PersistAction } from './types.js';
 import chalk from 'chalk';
 import { exit } from 'process';
 import YAML from 'js-yaml';
 import { getTestUrl } from './replacements.js';
+import { getStatePath } from './state.js';
 
 const libraryPath = getLibraryPath();
 const engine: 'puppeteer' | 'playwright' = 'playwright';
@@ -126,11 +127,6 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
         total: data.scenarios.length,
         delay: s.delay ?? 1000,
         state: s.state ?? data.state,
-        restore: !data.restore
-          ? s.restore
-          : !s.restore
-          ? data.restore
-          : [...(typeof data.restore === 'string' ? [data.restore] : data.restore), ...(typeof s.restore === 'string' ? [s.restore] : s.restore)],
         hideSelectors: s.hideSelectors ?? data.hideSelectors,
         removeSelectors: s.removeSelectors ?? data.removeSelectors,
         useCssOverride: s.useCssOverride ?? data.useCssOverride,
@@ -152,6 +148,14 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
       if (opts.restore && Array.isArray(opts.restore)) {
         // Deduplicate restore array
         opts.restore = opts.restore.filter((value, index, self) => self.indexOf(value) === index);
+      }
+
+      if (opts.actions && Array.isArray(opts.actions)) {
+        let persistActions = opts.actions.filter((a) => (a as PersistAction).persist) as PersistAction[];
+        for (const persistAction of persistActions) {
+          persistAction.path = getStatePath(persistAction.persist as string);
+          console.log('Persist action: ', persistAction);
+        }
       }
 
       const scenario = createScenario(opts);
@@ -193,6 +197,7 @@ export function getConfig(args: string[]): Config {
       browser: data?.browser ?? 'chromium',
       ignoreHTTPSErrors: data && typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : true,
       headless: data?.debug ? undefined : 'new',
+      storageState: data?.state ? getStatePath(data.state) : undefined,
     },
     asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
     asyncCompareLimit: data?.asyncCompareLimit ?? 50,

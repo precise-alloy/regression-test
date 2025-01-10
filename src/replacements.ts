@@ -8,7 +8,7 @@ import slash from 'slash';
 function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {
   const replacementProfileName = getStringArg(args, 'replacement-profile') ?? process.env.REPLACEMENT_PROFILE;
   if (!!replacementProfileName) {
-    const replacementProfilePath = slash(path.join(getLibraryPath(), 'common', '_replacement-profiles.yaml'));
+    const replacementProfilePath = slash(path.join(process.cwd(), 'common', '_replacement-profiles.yaml'));
     if (!fs.existsSync(replacementProfilePath)) {
       throw "Replacement profile doesn't exist: " + replacementProfilePath;
     }

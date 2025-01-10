@@ -7,3 +7,4 @@ profiles:
     - ref: https:\/\/legacy3.domain.com\/(.*)\.aspx
       test: https://new3.domain.com/$1
       regex: true
+      flags: i

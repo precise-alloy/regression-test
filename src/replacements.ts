@@ -5,17 +5,30 @@ import YAML from 'js-yaml';
 import { getStringArg } from './helpers.js';
 import slash from 'slash';
 
-function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {
-  const replacementProfileName = getStringArg(args, 'replacement-profile') ?? process.env.REPLACEMENT_PROFILE;
-  if (!!replacementProfileName) {
-    const replacementProfilePath = slash(path.join(process.cwd(), 'common', '_replacement-profiles.yaml'));
-    if (!fs.existsSync(replacementProfilePath)) {
-      throw "Replacement profile doesn't exist: " + replacementProfilePath;
-    }
-
-    const profiles = YAML.load(fs.readFileSync(replacementProfilePath, 'utf-8')) as ReplacementsModel;
-    return profiles.profiles[replacementProfileName];
+function getReplacementProfileName(args: string[]): string {
+  const profileArg = getStringArg(args, 'replacement-profile');
+  if (profileArg) {
+    return profileArg;
   }
+
+  const profileEnv = process.env.REPLACEMENT_PROFILE;
+  if (profileEnv) {
+    return profileEnv;
+  }
+
+  return 'default';
+}
+
+function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {
+  const replacementProfileName = getReplacementProfileName(args);
+
+  const replacementProfilePath = slash(path.join(process.cwd(), 'common', '_replacement-profiles.yaml'));
+  if (!fs.existsSync(replacementProfilePath)) {
+    throw "Replacement profile doesn't exist: " + replacementProfilePath;
+  }
+
+  const profiles = YAML.load(fs.readFileSync(replacementProfilePath, 'utf-8')) as ReplacementsModel;
+  return profiles.profiles[replacementProfileName];
 }
 
 export const getTestUrl = (args: string[], url: string, isRef: boolean) => {

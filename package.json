@@ -9,9 +9,9 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "ref": "tsx src/index.js ref",
-    "approve": "tsx src/index.js approve",
-    "test": "tsx src/index.js test"
+    "ref": "tsx src/index.ts ref",
+    "approve": "tsx src/index.ts approve",
+    "test": "tsx src/index.ts test"
   },
   "repository": {
     "type": "git",

@@ -14,7 +14,9 @@
           }
         }
       },
-      "required": ["profiles"]
+      "required": [
+        "profiles"
+      ]
     },
     "Replacement": {
       "type": "object",
@@ -24,9 +26,18 @@
         },
         "test": {
           "type": "string"
+        },
+        "regex": {
+          "type": "boolean"
+        },
+        "flags": {
+          "type": "string"
         }
       },
-      "required": ["ref", "test"]
+      "required": [
+        "ref",
+        "test"
+      ]
     }
   }
 }

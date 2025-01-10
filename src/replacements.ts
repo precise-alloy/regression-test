@@ -39,7 +39,10 @@ export const getTestUrl = (args: string[], url: string, isRef: boolean) => {
   }
 
   let testUrl = url;
-  replacementProfile.forEach((e) => (testUrl = testUrl.replace(e.ref, e.test)));
+  replacementProfile.forEach((e) => {
+    // console.log('Replacing: ', e.ref, ' with ', e.test, ' regex: ', e.regex);
+    return (testUrl = e.regex ? testUrl.replace(new RegExp(e.ref, e.flags), e.test) : testUrl.replace(e.ref, e.test));
+  });
 
   return testUrl;
 };

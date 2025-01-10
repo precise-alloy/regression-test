@@ -3,6 +3,8 @@ import { Scenario } from 'backstopjs';
 export interface ReplacementModel {
   ref: string;
   test: string;
+  regex?: boolean;
+  flags?: string;
 }
 
 export interface ReplacementsModel {

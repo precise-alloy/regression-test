@@ -190,7 +190,7 @@
                 "$ref": "#/definitions/ClickAction"
               },
               {
-                "$ref": "#/definitions/GoToAction"
+                "$ref": "#/definitions/GotoAction"
               },
               {
                 "$ref": "#/definitions/HideAction"

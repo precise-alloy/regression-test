@@ -49,6 +49,11 @@ module.exports = async (context) => {
       el.focus();
     }
 
+    if (!!action.goto) {
+      console.log(logPrefix + 'Goto:', action.goto);
+      await page.goto(action.goto);
+    }
+
     if (!!action.hide) {
       console.log(logPrefix + 'Hide:', action.hide);
       await page.waitForSelector(action.hide);

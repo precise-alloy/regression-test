@@ -190,6 +190,9 @@
                 "$ref": "#/definitions/ClickAction"
               },
               {
+                "$ref": "#/definitions/GoToAction"
+              },
+              {
                 "$ref": "#/definitions/HideAction"
               },
               {
@@ -288,7 +291,10 @@
             }
           ]
         }
-      }
+      },
+      "required": [
+        "check"
+      ]
     },
     "ClickAction": {
       "type": "object",
@@ -310,7 +316,10 @@
             }
           ]
         }
-      }
+      },
+      "required": [
+        "click"
+      ]
     },
     "HideAction": {
       "type": "object",
@@ -335,6 +344,31 @@
       },
       "required": [
         "hide"
+      ]
+    },
+    "GotoAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "goto": {
+          "type": "string"
+        },
+        "frame": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "goto"
       ]
     },
     "HoverAction": {
@@ -613,7 +647,10 @@
             }
           ]
         }
-      }
+      },
+      "required": [
+        "uncheck"
+      ]
     },
     "WaitAction": {
       "type": "object",
@@ -671,7 +708,10 @@
             }
           ]
         }
-      }
+      },
+      "required": [
+        "persist"
+      ]
     }
   }
 }

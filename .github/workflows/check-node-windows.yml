@@ -1,11 +1,9 @@
-name: Regression test Deploy
+name: Check Node - Windows
 
 on:
   push:
     branches:
-      - release
-    paths:
-      - package.json
+      - master
 
   workflow_dispatch:
 
@@ -28,12 +26,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      - name: Build
-        run: npm run build
-
-      - name: Publish to NPM
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Tests
+        run: npm run ref --test-suite alloy

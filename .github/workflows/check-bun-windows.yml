@@ -27,4 +27,4 @@ jobs:
         run: bun install
 
       - name: Tests
-        run: bun run ref --test-suite alloy
+        run: bun run ref -- --test-suite alloy

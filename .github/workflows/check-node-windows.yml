@@ -29,4 +29,4 @@ jobs:
         run: npm install
 
       - name: Tests
-        run: npm run ref --test-suite alloy
+        run: npm run ref -- --test-suite alloy

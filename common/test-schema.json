@@ -179,6 +179,21 @@
         "noScrollTop": {
           "type": "boolean"
         },
+        "selectors": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "title": "Selectors",
+          "description": "Array of selectors to capture. Defaults to document if omitted. Use \"viewport\" to capture the viewport size."
+        },
         "actions": {
           "type": "array",
           "items": {

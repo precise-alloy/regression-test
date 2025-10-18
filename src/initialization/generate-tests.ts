@@ -30,6 +30,11 @@ export async function initCommonFolder() {
       const source = slash(path.join(sourceFolder, file));
       const destination = slash(path.join(destinationFolder, file));
 
+      const parentFolder = path.dirname(destination);
+      if (!fs.existsSync(parentFolder)) {
+        mkdirSync(parentFolder, { recursive: true });
+      }
+
       if (fs.existsSync(source)) {
         fs.copyFileSync(source, destination);
       }

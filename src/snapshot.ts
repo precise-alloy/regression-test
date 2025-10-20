@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import backstop, { Config } from 'backstopjs';
+import { Config } from 'backstopjs';
 import chalk from 'chalk';
 import { BackstopReport, HtmlReportSummary } from './types';
 

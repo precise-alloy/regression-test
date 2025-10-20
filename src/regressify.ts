@@ -4,6 +4,7 @@ import { getLibraryPath } from './helpers.js';
 import path from 'path';
 import fs from 'fs';
 import { getConfigs } from './config.js';
+import { BackstopReport } from './types.js';
 
 const PATCH_START = '<!-- PATCH START -->';
 const PATCH_END = '<!-- PATCH END -->';
@@ -19,10 +20,54 @@ ${PATCH_START}
 ${PATCH_END}
 `;
 
-export async function regressifyProcess(command: 'approve' | 'reference' | 'test', args: string[]) {
-  packCompare();
+export async function regressifyProcess(command: 'approve' | 'reference' | 'test' | 'snapshot', args: string[]) {
+  patchCompare();
 
   const configs = getConfigs(args);
+
+  if (command === 'snapshot') {
+    const backstopDir = path.join(process.cwd(), '.backstop');
+    if (!fs.existsSync(backstopDir)) {
+      return;
+    }
+
+    configs.forEach((config) => {
+      const testDir = path.join(backstopDir, config.id);
+      if (fs.existsSync(testDir)) {
+        const htmlReportDir = path.join(testDir, 'html_report');
+        const bitmapTestDir = path.join(testDir, 'bitmaps_test');
+
+        if (!fs.existsSync(htmlReportDir)) {
+          return;
+        }
+
+        const configPath = path.join(htmlReportDir, 'config.js');
+
+        if (!fs.existsSync(configPath)) {
+          return;
+        }
+
+        const configText = fs.readFileSync(configPath, 'utf-8').replaceAll('\\', '/');
+
+        const subDirs = fs
+          .readdirSync(bitmapTestDir, { withFileTypes: true })
+          .filter((dirent) => dirent.isDirectory())
+          .map((dirent) => dirent.name);
+
+        subDirs.forEach((subDir) => {
+          if (!configText.includes(`bitmaps_test/${subDir}`) && !configText.includes(`bitmaps_reference/${subDir}`)) {
+            // Remove unreferenced snapshot directory
+            const fullPath = path.join(bitmapTestDir, subDir);
+            fs.rmSync(fullPath, { recursive: true, force: true });
+            console.log(chalk.yellow(`Removed unreferenced snapshot directory: ${fullPath}`));
+          } else {
+          }
+        });
+      }
+    });
+
+    return;
+  }
 
   configs.forEach(async (config) => {
     await backstop(command, { config })
@@ -35,7 +80,7 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
   });
 }
 
-function packCompare() {
+function patchCompare() {
   const reportIndex = path.resolve(getLibraryPath(), 'node_modules/backstopjs/compare/output/index.html');
   if (fs.existsSync(reportIndex)) {
     let html = fs.readFileSync(reportIndex, 'utf-8');

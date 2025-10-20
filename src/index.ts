@@ -28,6 +28,8 @@ if (command === 'version') {
   await regressifyProcess('approve', args.slice(1));
 } else if (command === 'test') {
   await regressifyProcess('test', args.slice(1));
+} else if (command === 'snapshot') {
+  await regressifyProcess('snapshot', args.slice(1));
 } else {
   logErrorAndExit();
 }

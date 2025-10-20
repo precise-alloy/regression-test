@@ -3,7 +3,7 @@ import backstop from 'backstopjs';
 import { getLibraryPath } from './helpers.js';
 import path from 'path';
 import fs from 'fs';
-import { getConfig } from './config.js';
+import { getConfigs } from './config.js';
 
 const PATCH_START = '<!-- PATCH START -->';
 const PATCH_END = '<!-- PATCH END -->';
@@ -22,15 +22,17 @@ ${PATCH_END}
 export async function regressifyProcess(command: 'approve' | 'reference' | 'test', args: string[]) {
   packCompare();
 
-  const config = getConfig(args);
+  const configs = getConfigs(args);
 
-  backstop(command, { config })
-    .then(() => {
-      console.log(chalk.green(command.toUpperCase() + ' FINISHED SUCCESSFULLY'));
-    })
-    .catch(() => {
-      console.log(chalk.red(command.toUpperCase() + ' FAILED'));
-    });
+  configs.forEach(async (config) => {
+    await backstop(command, { config })
+      .then(() => {
+        console.log(chalk.green(command.toUpperCase() + ' FINISHED SUCCESSFULLY'));
+      })
+      .catch(() => {
+        console.log(chalk.red(command.toUpperCase() + ' FAILED'));
+      });
+  });
 }
 
 function packCompare() {

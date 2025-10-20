@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { globSync } from 'fs';
 import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
@@ -10,10 +10,16 @@ import YAML from 'js-yaml';
 import { getTestUrl } from './replacements.js';
 import { getStatePath } from './state.js';
 
+type ArgConfig = {
+  testSuite: string;
+  isRef: boolean;
+  globalRequiredLogin: boolean;
+};
+
 const libraryPath = getLibraryPath();
 const engine: 'puppeteer' | 'playwright' = 'playwright';
 
-function getArgConfig(args: string[]) {
+function getArgConfigs(args: string[]): ArgConfig[] {
   const testSuite = getStringArg(args, '--test-suite');
   const isRef = getFlagArg(args, '--ref');
   const globalRequiredLogin = getFlagArg(args, '--requiredLogin');
@@ -28,11 +34,16 @@ function getArgConfig(args: string[]) {
     exit(1);
   }
 
-  return {
-    testSuite,
-    isRef,
-    globalRequiredLogin,
-  };
+  return globSync(testSuite + '.tests.{yaml,yml,json}', { cwd: path.join(process.cwd(), 'visual_tests') })
+    .map((file) => {
+      const fileName = path.basename(file);
+      return fileName.substring(0, fileName.indexOf('.tests.')).toLowerCase();
+    })
+    .map((s) => ({
+      testSuite: s,
+      isRef,
+      globalRequiredLogin,
+    }));
 }
 
 function getScriptPath(scriptPath: string, engine: 'puppeteer' | 'playwright') {
@@ -166,44 +177,46 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
   return { scenarios, data, viewports };
 }
 
-export function getConfig(args: string[]): Config {
-  const { testSuite, isRef, globalRequiredLogin } = getArgConfig(args);
-  const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin);
+export function getConfigs(args: string[]): Config[] {
+  return getArgConfigs(args).map((argConfig) => {
+    const { testSuite, isRef, globalRequiredLogin } = argConfig;
+    const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin);
 
-  const config = {
-    id: testSuite,
-    viewports,
-    onBeforeScript: getScriptPath('/onBefore.js', engine),
-    onReadyScript: getScriptPath('/onReady.js', engine),
-    scenarios,
-    paths: {
-      bitmaps_reference: '.backstop/' + testSuite + '/bitmaps_reference',
-      bitmaps_test: '.backstop/' + testSuite + '/bitmaps_test',
-      engine_scripts: `${getLibraryPath()}/.engine_scripts`,
-      html_report: '.backstop/' + testSuite + '/html_report',
-      ci_report: '.backstop/' + testSuite + '/ci_report',
-    },
-    report: [isRef ? 'CI' : 'browser'],
-    engine,
-    engineOptions: {
-      args: [
-        '--disable-infobars',
-        '--disable-setuid-sandbox',
-        '--ignore-certifcate-errors',
-        '--ignore-certifcate-errors-spki-list',
-        '--no-sandbox',
-        '--window-position=0,0',
-      ],
-      browser: data?.browser ?? 'chromium',
-      ignoreHTTPSErrors: data && typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : true,
-      headless: data?.debug ? undefined : 'new',
-      storageState: data?.state && fs.existsSync(getStatePath(data.state)) ? getStatePath(data.state) : undefined,
-    },
-    asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
-    asyncCompareLimit: data?.asyncCompareLimit ?? 50,
-    debug: false,
-    debugWindow: data?.debug,
-  } as Config;
+    const config = {
+      id: testSuite,
+      viewports,
+      onBeforeScript: getScriptPath('/onBefore.js', engine),
+      onReadyScript: getScriptPath('/onReady.js', engine),
+      scenarios,
+      paths: {
+        bitmaps_reference: '.backstop/' + testSuite + '/bitmaps_reference',
+        bitmaps_test: '.backstop/' + testSuite + '/bitmaps_test',
+        engine_scripts: `${getLibraryPath()}/.engine_scripts`,
+        html_report: '.backstop/' + testSuite + '/html_report',
+        ci_report: '.backstop/' + testSuite + '/ci_report',
+      },
+      report: [isRef ? 'CI' : 'browser'],
+      engine,
+      engineOptions: {
+        args: [
+          '--disable-infobars',
+          '--disable-setuid-sandbox',
+          '--ignore-certifcate-errors',
+          '--ignore-certifcate-errors-spki-list',
+          '--no-sandbox',
+          '--window-position=0,0',
+        ],
+        browser: data?.browser ?? 'chromium',
+        ignoreHTTPSErrors: data && typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : true,
+        headless: data?.debug ? undefined : 'new',
+        storageState: data?.state && fs.existsSync(getStatePath(data.state)) ? getStatePath(data.state) : undefined,
+      },
+      asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
+      asyncCompareLimit: data?.asyncCompareLimit ?? 50,
+      debug: false,
+      debugWindow: data?.debug,
+    } as Config;
 
-  return config;
+    return config;
+  });
 }

@@ -1,4 +1,4 @@
-import fs, { globSync } from 'fs';
+import fs from 'fs';
 import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
@@ -9,6 +9,7 @@ import { exit } from 'process';
 import YAML from 'js-yaml';
 import { getTestUrl } from './replacements.js';
 import { getStatePath } from './state.js';
+import { globSync } from 'glob';
 
 type ArgConfig = {
   testSuite: string;

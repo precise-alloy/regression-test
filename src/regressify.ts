@@ -4,6 +4,7 @@ import { getLibraryPath } from './helpers.js';
 import path from 'path';
 import fs from 'fs';
 import { getConfigs } from './config.js';
+import { snapshot } from './snapshot.js';
 
 const PATCH_START = '<!-- PATCH START -->';
 const PATCH_END = '<!-- PATCH END -->';
@@ -19,10 +20,15 @@ ${PATCH_START}
 ${PATCH_END}
 `;
 
-export async function regressifyProcess(command: 'approve' | 'reference' | 'test', args: string[]) {
-  packCompare();
+export async function regressifyProcess(command: 'approve' | 'reference' | 'test' | 'snapshot', args: string[]) {
+  patchCompare();
 
   const configs = getConfigs(args);
+
+  if (command === 'snapshot') {
+    await snapshot(configs);
+    return;
+  }
 
   configs.forEach(async (config) => {
     await backstop(command, { config })
@@ -35,7 +41,7 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
   });
 }
 
-function packCompare() {
+function patchCompare() {
   const reportIndex = path.resolve(getLibraryPath(), 'node_modules/backstopjs/compare/output/index.html');
   if (fs.existsSync(reportIndex)) {
     let html = fs.readFileSync(reportIndex, 'utf-8');

@@ -51,3 +51,50 @@ export type PersistAction = {
   persist: string;
   path?: string;
 };
+
+export type BackstopReport = {
+  testSuite: string;
+  tests: BackstopTest[];
+  id: string;
+};
+
+export type BackstopTest = {
+  pair: BackstopPair;
+  status: string;
+};
+
+export type BackstopPair = {
+  reference: string;
+  test: string;
+  selector: string;
+  fileName: string;
+  label: string;
+  requireSameDimensions: boolean;
+  misMatchThreshold: number;
+  url: string;
+  referenceUrl: string;
+  expect: number;
+  viewportLabel: string;
+  diff: BackstopDiff;
+  diffImage?: string;
+};
+
+export type BackstopDiff = {
+  isSameDimensions: boolean;
+  dimensionDifference: BackstopDimensionDifference;
+  rawMisMatchPercentage: number;
+  misMatchPercentage: string;
+  analysisTime: number;
+};
+
+export type BackstopDimensionDifference = {
+  width: number;
+  height: number;
+};
+
+export type HtmlReportSummary = {
+  id: string;
+  totalTests: number;
+  totalPassed: number;
+  totalFailed: number;
+};

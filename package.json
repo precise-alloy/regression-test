@@ -1,6 +1,6 @@
 {
   "name": "regressify",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Visual regression tests support",
   "main": "src/index.ts",
   "type": "module",
@@ -11,7 +11,9 @@
     "build": "tsc --project tsconfig.json",
     "ref": "tsx src/index.ts ref",
     "approve": "tsx src/index.ts approve",
-    "test": "tsx src/index.ts test"
+    "test": "tsx src/index.ts test",
+    "snapshot": "tsx src/index.ts snapshot",
+    "ver": "bun version"
   },
   "repository": {
     "type": "git",

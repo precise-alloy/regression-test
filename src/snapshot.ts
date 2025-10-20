@@ -34,14 +34,15 @@ async function processTestSuite(backstopDir: string, config: Config) {
   const htmlReportSummary: HtmlReportSummary[] = [];
 
   subDirs.forEach((subDir) => {
+    const subDirFullPath = path.join(bitmapTestDir, subDir);
+
     if (!configText.includes(`bitmaps_test/${subDir}`) && !configText.includes(`bitmaps_test\\\\${subDir}`)) {
       // Remove unreferenced snapshot directory
-      const fullPath = path.join(bitmapTestDir, subDir);
-      fs.rmSync(fullPath, { recursive: true, force: true });
-      console.log(chalk.yellow(`Removed unreferenced snapshot directory: ${fullPath}`));
+      fs.rmSync(subDirFullPath, { recursive: true, force: true });
+      console.log(chalk.yellow(`Removed unreferenced snapshot directory: ${subDirFullPath}`));
     } else {
       // console.log(chalk.green(`Snapshot directory is referenced: ${subDir}`));
-      const reportJsonPath = path.join(subDir, 'report.json');
+      const reportJsonPath = path.join(subDirFullPath, 'report.json');
       if (fs.existsSync(reportJsonPath)) {
         const reportText = fs.readFileSync(reportJsonPath, 'utf-8');
         const report = JSON.parse(reportText) as BackstopReport;
@@ -62,24 +63,85 @@ async function processTestSuite(backstopDir: string, config: Config) {
 }
 
 const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSummary[]) => {
-  let html = `<html><head><title>Snapshot Report Summary</title></head><body>`;
-  html += `<h1>Snapshot Report Summary</h1>`;
-  html += `<table border="1" cellpadding="5" cellspacing="0">`;
-  html += `<tr><th>Snapshot ID</th><th>Total Tests</th><th>Total Passed</th><th>Total Failed</th></tr>`;
+  const htmlTemplate = `<html>
+  <head>
+    <title>Snapshot Report Summary</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 40px 24px;
+        font-family: Arial, sans-serif;
+      }
+
+      h1 {
+        margin: 40px 0 60px;
+        text-align: center;
+      }
+
+      table {
+        margin: 0 auto;
+        max-width: 800px;
+        border-collapse: collapse;
+        border: 2px solid #888;
+      }
+
+      th,
+      td {
+        text-align: center;
+        padding: 8px;
+        border: 1px solid #aaa;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      .success {
+        color: green;
+        background-color: #d4edda;
+        font-weight: bold;
+      }
+
+      .danger {
+        color: red;
+        background-color: #f8d7da;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Visual Tests Summary</h1>
+    <table>
+      <tr>
+        <th>Test Suite</th>
+        <th>Total Tests</th>
+        <th>Total Passed</th>
+        <th>Total Failed</th>
+      </tr>
+      <!-- PLACEHOLDER -->
+    </table>
+  </body>
+</html>
+`;
+  let html = '';
 
   summaries.forEach((summary) => {
+    const successClass = summary.totalPassed === summary.totalTests ? 'class="success"' : '';
+    const dangerClass = summary.totalFailed > 0 ? 'class="danger"' : '';
+
     html += `<tr>`;
     html += `<td><a href="./${summary.id}/html_report/index.html">${summary.id}</a></td>`;
     html += `<td>${summary.totalTests}</td>`;
-    html += `<td>${summary.totalPassed}</td>`;
-    html += `<td>${summary.totalFailed}</td>`;
+    html += `<td ${successClass}>${summary.totalPassed}</td>`;
+    html += `<td ${dangerClass}>${summary.totalFailed}</td>`;
     html += `</tr>`;
   });
 
-  html += `</table></body></html>`;
+  const finalHtml = htmlTemplate.replace('<!-- PLACEHOLDER -->', html);
 
   const reportPath = path.join(backstopDir, 'index.html');
-  fs.writeFileSync(reportPath, html, 'utf-8');
+  fs.writeFileSync(reportPath, finalHtml, 'utf-8');
   console.log(chalk.blue(`Snapshot report summary generated at: ${reportPath}`));
 };
 

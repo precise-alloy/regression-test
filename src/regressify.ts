@@ -41,18 +41,25 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
   });
 }
 
+function patchCustomStyle(reportIndex: string) {
+  let html = fs.readFileSync(reportIndex, 'utf-8');
+  const patchStartIndex = html.indexOf(PATCH_START);
+  const patchEndIndex = html.indexOf(PATCH_END);
+  if (patchStartIndex > 0 && patchEndIndex > patchStartIndex) {
+    html = html.replace(new RegExp(PATCH_START + '.*' + patchEndIndex, 'gi'), customStyle);
+  } else {
+    html = html.replace('</head>', customStyle + '</head>');
+  }
+  fs.writeFileSync(reportIndex, html);
+}
+
 function patchCompare() {
   const reportIndex = path.resolve(getLibraryPath(), 'node_modules/backstopjs/compare/output/index.html');
+  const reportIndex2 = path.resolve(getLibraryPath(), '../backstopjs/compare/output/index.html');
   if (fs.existsSync(reportIndex)) {
-    let html = fs.readFileSync(reportIndex, 'utf-8');
-    const patchStartIndex = html.indexOf(PATCH_START);
-    const patchEndIndex = html.indexOf(PATCH_END);
-    if (patchStartIndex > 0 && patchEndIndex > patchStartIndex) {
-      html = html.replace(new RegExp(PATCH_START + '.*' + patchEndIndex, 'gi'), customStyle);
-    } else {
-      html = html.replace('</head>', customStyle + '</head>');
-    }
-    fs.writeFileSync(reportIndex, html);
+    patchCustomStyle(reportIndex);
+  } else if (fs.existsSync(reportIndex2)) {
+    patchCustomStyle(reportIndex2);
   } else {
     console.log(chalk.red('File does not exist: ' + reportIndex));
   }

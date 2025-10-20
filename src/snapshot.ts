@@ -49,7 +49,7 @@ async function processTestSuite(backstopDir: string, config: Config) {
         const passCount = report?.tests?.filter((t) => t.status === 'pass').length ?? 0;
         const failCount = report?.tests?.filter((t) => t.status === 'fail').length ?? 0;
         htmlReportSummary.push({
-          id: subDir,
+          id: report.id,
           totalTests: report.tests.length,
           totalPassed: passCount,
           totalFailed: failCount,
@@ -88,7 +88,7 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
       th,
       td {
         text-align: center;
-        padding: 8px;
+        padding: 12px 16px;
         border: 1px solid #aaa;
       }
 
@@ -116,8 +116,8 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
       <tr>
         <th>Test Suite</th>
         <th>Total Tests</th>
-        <th>Total Passed</th>
-        <th>Total Failed</th>
+        <th>Passed</th>
+        <th>Failed</th>
       </tr>
       <!-- PLACEHOLDER -->
     </table>

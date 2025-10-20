@@ -31,6 +31,8 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
   }
 
   configs.forEach(async (config) => {
+    console.log(chalk.blue(`Running backstopjs command: ${command} for test suite: ${config.id}`));
+
     await backstop(command, { config })
       .then(() => {
         console.log(chalk.green(command.toUpperCase() + ' FINISHED SUCCESSFULLY'));

@@ -9,6 +9,12 @@ export const getStringArg = (args: string[], key: string): string | undefined =>
   return index >= 0 && index < args.length - 1 && !args[index + 1].startsWith('-') ? args[index + 1] : undefined;
 };
 
+export const getBackstopDirName = (args: string[]): string => {
+  const siteEnv = getStringArg(args, '--site-env');
+
+  return siteEnv ? `.backstop__${siteEnv}` : '.backstop';
+};
+
 export const getFlagArg = (args: string[], key: string): boolean => {
   return args.indexOf(key) >= 0;
 };

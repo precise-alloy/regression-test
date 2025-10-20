@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import backstop from 'backstopjs';
-import { getLibraryPath } from './helpers.js';
+import { getBackstopDirName, getLibraryPath } from './helpers.js';
 import path from 'path';
 import fs from 'fs';
 import { getConfigs } from './config.js';
@@ -21,12 +21,13 @@ ${PATCH_END}
 `;
 
 export async function regressifyProcess(command: 'approve' | 'reference' | 'test' | 'snapshot', args: string[]) {
+  const backstopDirName = getBackstopDirName(args);
   patchCompare();
 
-  const configs = getConfigs(args);
+  const configs = getConfigs(args, backstopDirName);
 
   if (command === 'snapshot') {
-    await snapshot(configs);
+    await snapshot({ configs, backstopDirName });
     return;
   }
 

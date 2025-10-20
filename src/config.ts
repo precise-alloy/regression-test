@@ -181,23 +181,26 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
   return { scenarios, data, viewports };
 }
 
-export function getConfigs(args: string[]): Config[] {
+export function getConfigs(args: string[], backstopDirName: string): Config[] {
   return getArgConfigs(args).map((argConfig) => {
     const { testSuite, isRef, globalRequiredLogin } = argConfig;
     const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin);
 
+    const backStopTestSuiteFolder = backstopDirName + '/' + testSuite;
+
     const config = {
       id: testSuite,
+      backstopDirName,
       viewports,
       onBeforeScript: getScriptPath('/onBefore.js', engine),
       onReadyScript: getScriptPath('/onReady.js', engine),
       scenarios,
       paths: {
-        bitmaps_reference: '.backstop/' + testSuite + '/bitmaps_reference',
-        bitmaps_test: '.backstop/' + testSuite + '/bitmaps_test',
+        bitmaps_reference: backStopTestSuiteFolder + '/bitmaps_reference',
+        bitmaps_test: backStopTestSuiteFolder + '/bitmaps_test',
+        html_report: backStopTestSuiteFolder + '/html_report',
+        ci_report: backStopTestSuiteFolder + '/ci_report',
         engine_scripts: `${getLibraryPath()}/.engine_scripts`,
-        html_report: '.backstop/' + testSuite + '/html_report',
-        ci_report: '.backstop/' + testSuite + '/ci_report',
       },
       report: [isRef ? 'CI' : 'browser'],
       engine,

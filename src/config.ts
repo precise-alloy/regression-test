@@ -35,7 +35,10 @@ function getArgConfigs(args: string[]): ArgConfig[] {
     exit(1);
   }
 
-  return globSync(testSuite + '.tests.{yaml,yml,json}', { cwd: path.join(process.cwd(), 'visual_tests') })
+  const visualTestsDir = path.join(process.cwd(), 'visual_tests');
+  console.log('Looking for test suites in: ', visualTestsDir, ' with pattern: ', testSuite + '.tests.{yaml,yml,json}');
+
+  return globSync(testSuite + '.tests.{yaml,yml,json}', { cwd: visualTestsDir })
     .map((file) => {
       const fileName = path.basename(file);
       return fileName.substring(0, fileName.indexOf('.tests.')).toLowerCase();

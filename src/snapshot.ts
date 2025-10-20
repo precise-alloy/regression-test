@@ -24,7 +24,7 @@ async function processTestSuite(backstopDir: string, config: Config) {
     return;
   }
 
-  const configText = fs.readFileSync(configPath, 'utf-8').replaceAll('\\', '/');
+  const configText = fs.readFileSync(configPath, 'utf-8');
 
   const subDirs = fs
     .readdirSync(bitmapTestDir, { withFileTypes: true })
@@ -34,7 +34,7 @@ async function processTestSuite(backstopDir: string, config: Config) {
   const htmlReportSummary: HtmlReportSummary[] = [];
 
   subDirs.forEach((subDir) => {
-    if (!configText.includes(`bitmaps_test/${subDir}`) && !configText.includes(`bitmaps_reference/${subDir}`)) {
+    if (!configText.includes(`bitmaps_test/${subDir}`) && !configText.includes(`bitmaps_test\\\\${subDir}`)) {
       // Remove unreferenced snapshot directory
       const fullPath = path.join(bitmapTestDir, subDir);
       fs.rmSync(fullPath, { recursive: true, force: true });

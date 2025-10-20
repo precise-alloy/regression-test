@@ -148,6 +148,7 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
 export async function snapshot(configs: Config[]) {
   const backstopDir = path.join(process.cwd(), '.backstop');
   if (!fs.existsSync(backstopDir)) {
+    console.log(chalk.red(`Backstop directory does not exist: ${backstopDir}`));
     return;
   }
 

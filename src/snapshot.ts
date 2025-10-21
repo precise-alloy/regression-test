@@ -165,5 +165,7 @@ export function snapshot({ configs, backstopDirName }: { configs: Config[]; back
     }
   }
 
+  htmlReportSummary.sort((a, b) => a.id.localeCompare(b.id));
+
   generateHtmlReportSummary(backstopDir, htmlReportSummary);
 }

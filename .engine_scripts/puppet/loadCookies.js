@@ -33,6 +33,7 @@ module.exports = async (page, scenario) => {
         cookie.expirationDate = Date.now() / 1000 + 31536000; // 1 year from now
       }
 
+      cookie.domain = undefined;
       delete cookie.domain;
 
       parsedCookies.push(cookie);

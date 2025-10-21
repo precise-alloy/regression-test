@@ -2,23 +2,23 @@ const fs = require('fs');
 const YAML = require('js-yaml');
 
 module.exports = async (page, scenario) => {
-  let cookies = [];
+  let cookiesFromFile = [];
   const cookiePath = scenario.cookiePath;
 
   // READ COOKIES FROM FILE IF EXISTS
   if (!!cookiePath && fs.existsSync(cookiePath)) {
     let content = fs.readFileSync(cookiePath);
     if (cookiePath.endsWith('.json')) {
-      cookies = JSON.parse(content);
+      cookiesFromFile = JSON.parse(content);
     } else if (cookiePath.endsWith('.yaml') || cookiePath.endsWith('.yml')) {
-      cookies = YAML.load(content);
+      cookiesFromFile = YAML.load(content);
     }
   }
 
-  const parsedCookies = [];
+  const cookies = [];
 
   // MUNGE COOKIE DOMAIN
-  [].forEach.call(cookies, (c) => {
+  [].forEach.call(cookiesFromFile, (c) => {
     let domains = typeof c.domain === 'string' ? [c.domain] : c.domain;
 
     [].forEach.call(domains, (domain) => {
@@ -36,19 +36,19 @@ module.exports = async (page, scenario) => {
       cookie.domain = undefined;
       delete cookie.domain;
 
-      parsedCookies.push(cookie);
+      cookies.push(cookie);
     });
   });
 
   if (process.env.DEBUG_COOKIES === 'true') {
     console.log('Restoring cookies from:', cookiePath);
-    console.log(JSON.stringify(parsedCookies, null, 2));
+    console.log(JSON.stringify(cookies, null, 2));
   }
 
   // SET COOKIES
   const setCookies = async () => {
     return Promise.all(
-      parsedCookies.map(async (cookie) => {
+      cookies.map(async (cookie) => {
         await page.setCookie(cookie);
       })
     );

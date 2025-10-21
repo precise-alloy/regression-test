@@ -25,19 +25,11 @@ module.exports = async (browserContext, scenario) => {
     let domains = typeof c.domain === 'string' ? [c.domain] : c.domain;
 
     [].forEach.call(domains, (domain) => {
-      const cookie = { ...c };
-      if (domain.startsWith('http://') || domain.startsWith('https://')) {
-        cookie.url = domain;
-      } else {
-        cookie.url = 'https://' + domain;
-      }
+      const cookie = { ...c, domain };
 
       if (!cookie.expirationDate) {
         cookie.expirationDate = Date.now() / 1000 + 31536000; // 1 year from now
       }
-
-      cookie.domain = undefined;
-      delete cookie.domain;
 
       cookies.push(cookie);
     });

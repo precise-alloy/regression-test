@@ -15,21 +15,29 @@ module.exports = async (page, scenario) => {
     }
   }
 
+  const parsedCookies = [];
+
   // MUNGE COOKIE DOMAIN
-  cookies = cookies.map((cookie) => {
-    if (cookie.domain.startsWith('http://') || cookie.domain.startsWith('https://')) {
-      cookie.url = cookie.domain;
-    } else {
-      cookie.url = 'https://' + cookie.domain;
-    }
-    delete cookie.domain;
-    return cookie;
+  [].forEach.call(cookies, (c) => {
+    let domains = typeof c.domain === 'string' ? [c.domain] : c.domain;
+
+    [].forEach.call(domains, (domain) => {
+      const cookie = { ...c };
+      if (domain.startsWith('http://') || domain.startsWith('https://')) {
+        cookie.url = domain;
+      } else {
+        cookie.url = 'https://' + domain;
+      }
+      delete cookie.domain;
+
+      parsedCookies.push(cookie);
+    });
   });
 
   // SET COOKIES
   const setCookies = async () => {
     return Promise.all(
-      cookies.map(async (cookie) => {
+      parsedCookies.map(async (cookie) => {
         await page.setCookie(cookie);
       })
     );

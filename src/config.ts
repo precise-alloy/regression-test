@@ -135,6 +135,7 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
     data.scenarios.forEach((s, index) => {
       const opts: ScenarioModel = {
         ...s,
+        testSuite,
         requiredLogin: globalRequiredLogin || s.requiredLogin,
         getTestUrl: getTestUrlLocal,
         url: isRef ? s.url : getTestUrl(args, s.url, isRef),

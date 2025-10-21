@@ -27,7 +27,7 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
   const configs = getConfigs(args, backstopDirName);
 
   if (command === 'snapshot') {
-    await snapshot({ configs, backstopDirName });
+    snapshot({ configs, backstopDirName });
     return;
   }
 

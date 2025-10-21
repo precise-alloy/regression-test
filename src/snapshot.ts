@@ -4,7 +4,7 @@ import { Config } from 'backstopjs';
 import chalk from 'chalk';
 import { BackstopReport, HtmlReportSummary } from './types';
 
-async function processTestSuite(backstopDir: string, config: Config): HtmlReportSummary | null {
+function processTestSuite(backstopDir: string, config: Config): HtmlReportSummary | null {
   const testDir = path.join(backstopDir, config.id);
   if (!fs.existsSync(testDir)) {
     console.log(chalk.red(`Test directory does not exist: ${testDir}`));
@@ -145,7 +145,7 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
   console.log(chalk.blue(`Snapshot report summary generated at: ${reportPath}`));
 };
 
-export async function snapshot({ configs, backstopDirName }: { configs: Config[]; backstopDirName: string }) {
+export function snapshot({ configs, backstopDirName }: { configs: Config[]; backstopDirName: string }) {
   const backstopDir = path.join(process.cwd(), backstopDirName);
   if (!fs.existsSync(backstopDir)) {
     console.log(chalk.red(`Backstop directory does not exist: ${backstopDir}`));

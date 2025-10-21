@@ -4,24 +4,24 @@ import { Config } from 'backstopjs';
 import chalk from 'chalk';
 import { BackstopReport, HtmlReportSummary } from './types';
 
-async function processTestSuite(backstopDir: string, config: Config) {
+async function processTestSuite(backstopDir: string, config: Config): HtmlReportSummary | null {
   const testDir = path.join(backstopDir, config.id);
   if (!fs.existsSync(testDir)) {
     console.log(chalk.red(`Test directory does not exist: ${testDir}`));
-    return;
+    return null;
   }
 
   const htmlReportDir = path.join(testDir, 'html_report');
   const bitmapTestDir = path.join(testDir, 'bitmaps_test');
 
   if (!fs.existsSync(htmlReportDir)) {
-    return;
+    return null;
   }
 
   const configPath = path.join(htmlReportDir, 'config.js');
 
   if (!fs.existsSync(configPath)) {
-    return;
+    return null;
   }
 
   const configText = fs.readFileSync(configPath, 'utf-8');
@@ -31,9 +31,7 @@ async function processTestSuite(backstopDir: string, config: Config) {
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-  const htmlReportSummary: HtmlReportSummary[] = [];
-
-  subDirs.forEach((subDir) => {
+  for (const subDir of subDirs) {
     const subDirFullPath = path.join(bitmapTestDir, subDir);
 
     if (!configText.includes(`bitmaps_test/${subDir}`) && !configText.includes(`bitmaps_test\\\\${subDir}`)) {
@@ -48,18 +46,20 @@ async function processTestSuite(backstopDir: string, config: Config) {
         const report = JSON.parse(reportText) as BackstopReport;
         const passCount = report?.tests?.filter((t) => t.status === 'pass').length ?? 0;
         const failCount = report?.tests?.filter((t) => t.status === 'fail').length ?? 0;
-        htmlReportSummary.push({
+
+        console.log(chalk.green(`Snapshot directory: ${subDir}, Passed: ${passCount}, Failed: ${failCount}`));
+
+        return {
           id: report.id,
           totalTests: report.tests.length,
           totalPassed: passCount,
           totalFailed: failCount,
-        });
-        console.log(chalk.green(`Snapshot directory: ${subDir}, Passed: ${passCount}, Failed: ${failCount}`));
+        };
       }
     }
-  });
+  }
 
-  generateHtmlReportSummary(backstopDir, htmlReportSummary);
+  return null;
 }
 
 const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSummary[]) => {
@@ -126,7 +126,7 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
 `;
   let html = '';
 
-  summaries.forEach((summary) => {
+  for (const summary of summaries) {
     const successClass = summary.totalPassed === summary.totalTests ? 'class="success"' : '';
     const dangerClass = summary.totalFailed > 0 ? 'class="danger"' : '';
 
@@ -136,7 +136,7 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
     html += `<td ${successClass}>${summary.totalPassed}</td>`;
     html += `<td ${dangerClass}>${summary.totalFailed}</td>`;
     html += `</tr>`;
-  });
+  }
 
   const finalHtml = htmlTemplate.replace('<!-- PLACEHOLDER -->', html);
 
@@ -152,5 +152,11 @@ export async function snapshot({ configs, backstopDirName }: { configs: Config[]
     return;
   }
 
-  configs.forEach((config) => processTestSuite(backstopDir, config));
+  const htmlReportSummary: HtmlReportSummary[] = [];
+
+  for (const config of configs) {
+    processTestSuite(backstopDir, config);
+  }
+
+  generateHtmlReportSummary(backstopDir, htmlReportSummary);
 }

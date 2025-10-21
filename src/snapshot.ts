@@ -127,6 +127,10 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
   let html = '';
 
   for (const summary of summaries) {
+    if (!summary) {
+      continue;
+    }
+
     const successClass = summary.totalPassed === summary.totalTests ? 'class="success"' : '';
     const dangerClass = summary.totalFailed > 0 ? 'class="danger"' : '';
 
@@ -155,7 +159,10 @@ export function snapshot({ configs, backstopDirName }: { configs: Config[]; back
   const htmlReportSummary: HtmlReportSummary[] = [];
 
   for (const config of configs) {
-    processTestSuite(backstopDir, config);
+    const summary = processTestSuite(backstopDir, config);
+    if (summary) {
+      htmlReportSummary.push(summary);
+    }
   }
 
   generateHtmlReportSummary(backstopDir, htmlReportSummary);

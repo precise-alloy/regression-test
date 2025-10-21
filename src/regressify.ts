@@ -31,7 +31,7 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
     return;
   }
 
-  configs.forEach(async (config) => {
+  for (const config of configs) {
     console.log(chalk.blue(`Running backstopjs command: ${command} for test suite: ${config.id}`));
 
     await backstop(command, { config })
@@ -41,7 +41,7 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
       .catch(() => {
         console.log(chalk.red(command.toUpperCase() + ' FAILED'));
       });
-  });
+  }
 }
 
 function patchCustomStyle(reportIndex: string) {

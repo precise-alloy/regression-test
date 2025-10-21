@@ -28,6 +28,11 @@ module.exports = async (page, scenario) => {
       } else {
         cookie.url = 'https://' + domain;
       }
+
+      if (!cookie.expirationDate) {
+        cookie.expirationDate = Date.now() / 1000 + 31536000; // 1 year from now
+      }
+
       delete cookie.domain;
 
       parsedCookies.push(cookie);

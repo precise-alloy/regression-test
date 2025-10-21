@@ -39,6 +39,11 @@ module.exports = async (page, scenario) => {
     });
   });
 
+  if (process.env.DEBUG_COOKIES === 'true') {
+    console.log('Restoring cookies from:', cookiePath);
+    console.log(JSON.stringify(parsedCookies, null, 2));
+  }
+
   // SET COOKIES
   const setCookies = async () => {
     return Promise.all(

@@ -93,14 +93,20 @@ function processTestSuite(backstopDir: string, config: Config, hashes: Record<st
         let modifiedConfigText = configText;
         for (const [filePath, hash] of Object.entries(hashes)) {
           if (modifiedConfigText.includes(filePath)) {
-            modifiedConfigText = modifiedConfigText.replaceAll(filePath, `${filePath}?v=${hash}`);
+            modifiedConfigText = modifiedConfigText
+              .replaceAll("'" + filePath + "'", "'" + `${filePath}?v=${hash}` + "'")
+              .replaceAll('"' + filePath + '"', '"' + `${filePath}?v=${hash}` + '"')
+              .replaceAll("'" + filePath.replaceAll('\\', '\\\\') + "'", "'" + `${filePath.replaceAll('\\', '\\\\')}?v=${hash}` + "'")
+              .replaceAll('"' + filePath.replaceAll('\\', '\\\\') + '"', '"' + `${filePath.replaceAll('\\', '\\\\')}?v=${hash}` + '"');
           }
         }
         fs.writeFileSync(configPath, modifiedConfigText, 'utf-8');
 
         const configHash = calculateTextHash(modifiedConfigText);
         const htmlIndexText = fs.readFileSync(htmlIndexPath, 'utf-8');
-        let modifiedHtmlIndexText = htmlIndexText.replaceAll('config.js', `config.js?v=${configHash}`);
+        let modifiedHtmlIndexText = htmlIndexText
+          .replaceAll("'config.js'", `'config.js?v=${configHash}'`)
+          .replaceAll('"config.js"', `"config.js?v=${configHash}"`);
         fs.writeFileSync(htmlIndexPath, modifiedHtmlIndexText, 'utf-8');
 
         console.log(chalk.green(`Snapshot directory: ${subDir}, Passed: ${passCount}, Failed: ${failCount}`));

@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import crypto from 'node:crypto';
 import { BackstopReport, BackstopTest, HtmlReportSummary } from './types';
 
-function calculateHash(filePath: string): string {
+function calculateFileHash(filePath: string): string {
   const content = fs.readFileSync(filePath);
   const sha1Hash = crypto.createHash('sha1');
 
@@ -68,20 +68,22 @@ function processTestSuite(backstopDir: string, config: Config, hashes: Record<st
           [].forEach.call(report.tests, (test: BackstopTest) => {
             if (test?.pair?.reference) {
               const referencePath = path.join(bitmapTestDir, test.pair.reference);
-              if (!fs.existsSync(referencePath)) {
+              if (fs.existsSync(referencePath)) {
                 if (!hashes[test.pair.reference]) {
-                  const hash = calculateHash(referencePath);
+                  const hash = calculateFileHash(referencePath);
                   hashes[test.pair.reference] = hash;
+                  console.log(`Calculated hash for reference image: ${test.pair.reference} => ${hash}`);
                 }
               }
             }
 
             if (test?.pair?.test) {
               const testPath = path.join(bitmapTestDir, test.pair.test);
-              if (!fs.existsSync(testPath)) {
+              if (fs.existsSync(testPath)) {
                 if (!hashes[test.pair.test]) {
-                  const hash = calculateHash(testPath);
+                  const hash = calculateFileHash(testPath);
                   hashes[test.pair.test] = hash;
+                  console.log(`Calculated hash for test image: ${test.pair.test} => ${hash}`);
                 }
               }
             }

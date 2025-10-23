@@ -87,6 +87,17 @@ function processTestSuite(backstopDir: string, config: Config, hashes: Record<st
                 }
               }
             }
+
+            if (test?.pair?.diffImage) {
+              const diffImagePath = path.join(bitmapTestDir, test.pair.diffImage);
+              if (fs.existsSync(diffImagePath)) {
+                if (!hashes[test.pair.diffImage]) {
+                  const hash = calculateFileHash(diffImagePath);
+                  hashes[test.pair.diffImage] = hash;
+                  console.log(`Calculated hash for diff image: ${test.pair.diffImage} => ${hash}`);
+                }
+              }
+            }
           });
         }
 

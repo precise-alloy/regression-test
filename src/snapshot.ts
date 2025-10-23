@@ -2,9 +2,25 @@ import path from 'path';
 import fs from 'fs';
 import { Config } from 'backstopjs';
 import chalk from 'chalk';
-import { BackstopReport, HtmlReportSummary } from './types';
+import crypto from 'node:crypto';
+import { BackstopReport, BackstopTest, HtmlReportSummary } from './types';
 
-function processTestSuite(backstopDir: string, config: Config): HtmlReportSummary | null {
+function calculateHash(filePath: string): string {
+  const content = fs.readFileSync(filePath);
+  const sha1Hash = crypto.createHash('sha1');
+
+  sha1Hash.update(content);
+  return sha1Hash.digest('base64url').substring(0, 10);
+}
+
+function calculateTextHash(text: string): string {
+  const sha1Hash = crypto.createHash('sha1');
+
+  sha1Hash.update(text);
+  return sha1Hash.digest('base64url').substring(0, 10);
+}
+
+function processTestSuite(backstopDir: string, config: Config, hashes: Record<string, string>): HtmlReportSummary | null {
   const testDir = path.join(backstopDir, config.id);
   if (!fs.existsSync(testDir)) {
     console.log(chalk.red(`Test directory does not exist: ${testDir}`));
@@ -19,6 +35,7 @@ function processTestSuite(backstopDir: string, config: Config): HtmlReportSummar
   }
 
   const configPath = path.join(htmlReportDir, 'config.js');
+  const htmlIndexPath = path.join(htmlReportDir, 'index.html');
 
   if (!fs.existsSync(configPath)) {
     return null;
@@ -46,6 +63,43 @@ function processTestSuite(backstopDir: string, config: Config): HtmlReportSummar
         const report = JSON.parse(reportText) as BackstopReport;
         const passCount = report?.tests?.filter((t) => t.status === 'pass').length ?? 0;
         const failCount = report?.tests?.filter((t) => t.status === 'fail').length ?? 0;
+
+        if (report?.tests) {
+          [].forEach.call(report.tests, (test: BackstopTest) => {
+            if (test?.pair?.reference) {
+              const referencePath = path.join(bitmapTestDir, test.pair.reference);
+              if (!fs.existsSync(referencePath)) {
+                if (!hashes[test.pair.reference]) {
+                  const hash = calculateHash(referencePath);
+                  hashes[test.pair.reference] = hash;
+                }
+              }
+            }
+
+            if (test?.pair?.test) {
+              const testPath = path.join(bitmapTestDir, test.pair.test);
+              if (!fs.existsSync(testPath)) {
+                if (!hashes[test.pair.test]) {
+                  const hash = calculateHash(testPath);
+                  hashes[test.pair.test] = hash;
+                }
+              }
+            }
+          });
+        }
+
+        let modifiedConfigText = configText;
+        for (const [filePath, hash] of Object.entries(hashes)) {
+          if (modifiedConfigText.includes(filePath)) {
+            modifiedConfigText = modifiedConfigText.replaceAll(filePath, `${filePath}?v=${hash}`);
+          }
+        }
+        fs.writeFileSync(configPath, modifiedConfigText, 'utf-8');
+
+        const configHash = calculateTextHash(modifiedConfigText);
+        const htmlIndexText = fs.readFileSync(htmlIndexPath, 'utf-8');
+        let modifiedHtmlIndexText = htmlIndexText.replaceAll('config.js', `config.js?v=${configHash}`);
+        fs.writeFileSync(htmlIndexPath, modifiedHtmlIndexText, 'utf-8');
 
         console.log(chalk.green(`Snapshot directory: ${subDir}, Passed: ${passCount}, Failed: ${failCount}`));
 
@@ -157,9 +211,10 @@ export function snapshot({ configs, backstopDirName }: { configs: Config[]; back
   }
 
   const htmlReportSummary: HtmlReportSummary[] = [];
+  const hashes: Record<string, string> = {};
 
   for (const config of configs) {
-    const summary = processTestSuite(backstopDir, config);
+    const summary = processTestSuite(backstopDir, config, hashes);
     if (summary) {
       htmlReportSummary.push(summary);
     }

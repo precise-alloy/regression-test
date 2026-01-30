@@ -152,10 +152,10 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
             ? viewports.filter((v) => v.label.toLowerCase() == (s.viewportNames as string).trim().toLowerCase())
             : viewports.filter((v) => s.viewportNames?.includes(v.label))
           : !!data.viewportNames
-          ? typeof data.viewportNames === 'string'
-            ? viewports.filter((v) => v.label.toLowerCase() == (data.viewportNames as string).trim().toLowerCase())
-            : viewports.filter((v) => data.viewportNames?.includes(v.label))
-          : undefined,
+            ? typeof data.viewportNames === 'string'
+              ? viewports.filter((v) => v.label.toLowerCase() == (data.viewportNames as string).trim().toLowerCase())
+              : viewports.filter((v) => data.viewportNames?.includes(v.label))
+            : undefined,
         referenceUrl: !isRef ? s.url : undefined,
         misMatchThreshold: s.misMatchThreshold ?? data.misMatchThreshold ?? 0.1,
         postInteractionWait: s.postInteractionWait ?? data.postInteractionWait ?? 1,
@@ -183,6 +183,19 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
 }
 
 export function getConfigs(args: string[], backstopDirName: string): Config[] {
+  // Check if running on CI environment, such as GitHub Actions or Azure Pipelines
+  // If so, turn of headless debug window
+  const isAzurePipelines =
+    process.env.TF_BUILD === 'True' &&
+    !!process.env.SYSTEM_TEAMFOUNDATIONSERVERURI &&
+    !!process.env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI &&
+    !!process.env.SYSTEM_TEAMPROJECT &&
+    !!process.env.SYSTEM_COLLECTIONURI;
+
+  const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+
+  const isCI = process.env.CI === 'true' || isAzurePipelines || isGitHubActions;
+
   return getArgConfigs(args).map((argConfig) => {
     const { testSuite, isRef, globalRequiredLogin } = argConfig;
     const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin);
@@ -216,13 +229,13 @@ export function getConfigs(args: string[], backstopDirName: string): Config[] {
         ],
         browser: data?.browser ?? 'chromium',
         ignoreHTTPSErrors: data && typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : true,
-        headless: data?.debug ? undefined : 'new',
+        headless: data?.debug && !isCI ? undefined : 'new',
         storageState: data?.state && fs.existsSync(getStatePath(data.state)) ? getStatePath(data.state) : undefined,
       },
       asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
       asyncCompareLimit: data?.asyncCompareLimit ?? 50,
       debug: false,
-      debugWindow: data?.debug,
+      debugWindow: data?.debug && !isCI,
     } as Config;
 
     return config;

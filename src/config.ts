@@ -76,7 +76,11 @@ function getData(testSuite: String): TestSuiteModel | undefined {
     if (fs.existsSync(dataPath)) {
       console.log('Data path: ', dataPath);
       const content = fs.readFileSync(dataPath, 'utf-8');
-      return extensions[i].parse(content) as TestSuiteModel;
+      const testSuite = extensions[i].parse(content) as TestSuiteModel;
+
+      testSuite.useCssOverride = typeof testSuite.useCssOverride === 'boolean' ? testSuite.useCssOverride : true;
+
+      return testSuite;
     }
   }
 
@@ -145,7 +149,7 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
         state: data.state,
         hideSelectors: s.hideSelectors ?? data.hideSelectors,
         removeSelectors: s.removeSelectors ?? data.removeSelectors,
-        useCssOverride: s.useCssOverride ?? data.useCssOverride,
+        useCssOverride: typeof s.useCssOverride === 'boolean' ? s.useCssOverride : data.useCssOverride,
         jsOnReadyPath: s.jsOnReadyPath,
         viewports: !!s.viewportNames
           ? typeof s.viewportNames === 'string'

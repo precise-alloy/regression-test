@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    timeout-minutes: 5
+    timeout-minutes: 20
     runs-on: windows-2022
     steps:
       - name: Checkout code
@@ -26,7 +26,16 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Tests
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests with coverage gate
+        run: npm run test:ci
+
+      - name: Install browsers
+        run: npm run install:browsers
+
+      - name: Smoke reference generation
         run: npm run ref -- --test-suite alloy

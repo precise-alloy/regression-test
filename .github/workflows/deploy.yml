@@ -18,8 +18,36 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    timeout-minutes: 5
+  validate:
+    timeout-minutes: 20
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests with coverage gate
+        run: npm run test:ci
+
+      - name: Install browsers
+        run: npm run install:browsers
+
+      - name: Smoke reference generation
+        run: npm run ref -- --test-suite alloy
+
+  publish:
+    needs: validate
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,14 +58,11 @@ jobs:
         with:
           node-version: '24.x'
 
-      # Ensure the latest npm is installed
-      - run: npm install -g npm@latest
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build package
         run: npm run build
 
-      - name: Publish to NPM
+      - name: Publish to npm
         run: npm publish --access public --provenance

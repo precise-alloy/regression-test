@@ -7,3 +7,4 @@ src/**/*.map
 *.tsbuildinfo
 .states/
 visual_tests/
+coverage/

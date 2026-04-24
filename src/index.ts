@@ -30,7 +30,7 @@ if (command === 'version') {
 } else if (command === 'install') {
   installBrowsers();
 } else if (command === 'ref') {
-  await regressifyProcess('test', ['--ref', ...args.slice(1)]);
+  await regressifyProcess('reference', ['--ref', ...args.slice(1)]);
 } else if (command === 'approve') {
   await regressifyProcess('approve', args.slice(1));
 } else if (command === 'test') {

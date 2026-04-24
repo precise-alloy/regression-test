@@ -19,10 +19,7 @@ afterEach(() => {
 
 describe('snapshot.ts', () => {
   it('applies cache-busting hashes to config.js paths and the html index reference', () => {
-    const configText = [
-      "'bitmaps_test/run-1/ref.png'",
-      '"bitmaps_test\\\\run-1\\\\test.png"',
-    ].join('\n');
+    const configText = ["'bitmaps_test/run-1/ref.png'", '"bitmaps_test\\\\run-1\\\\test.png"'].join('\n');
     const updatedConfig = applyHashesToConfigText(configText, {
       'bitmaps_test/run-1/ref.png': 'hash-ref',
       'bitmaps_test\\run-1\\test.png': 'hash-test',
@@ -79,13 +76,13 @@ describe('snapshot.ts', () => {
     writeWorkspaceFile(
       workspace,
       '.backstop/alloy/html_report/config.js',
-      [
-        "'bitmaps_test/run-1/ref.png'",
-        '"bitmaps_test/run-1/test.png"',
-        "'bitmaps_test/run-1/diff.png'",
-      ].join('\n'),
+      ["'bitmaps_test/run-1/ref.png'", '"bitmaps_test/run-1/test.png"', "'bitmaps_test/run-1/diff.png'"].join('\n')
     );
-    writeWorkspaceFile(workspace, '.backstop/alloy/html_report/index.html', '<html><head></head><body><script src="config.js"></script></body></html>');
+    writeWorkspaceFile(
+      workspace,
+      '.backstop/alloy/html_report/index.html',
+      '<html><head></head><body><script src="config.js"></script></body></html>'
+    );
     writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-1/ref.png', 'reference');
     writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-1/test.png', 'test');
     writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-1/diff.png', 'diff');
@@ -105,7 +102,7 @@ describe('snapshot.ts', () => {
             },
           },
         ],
-      }),
+      })
     );
     writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-old/unused.txt', 'old');
 
@@ -130,13 +127,29 @@ describe('snapshot.ts', () => {
     expect(consoleSpy).toHaveBeenCalled();
 
     writeWorkspaceFile(workspace, '.reports/b-suite/html_report/config.js', "'bitmaps_test/run-b/ref.png'");
-    writeWorkspaceFile(workspace, '.reports/b-suite/html_report/index.html', '<html><head></head><body><script src="config.js"></script></body></html>');
+    writeWorkspaceFile(
+      workspace,
+      '.reports/b-suite/html_report/index.html',
+      '<html><head></head><body><script src="config.js"></script></body></html>'
+    );
     writeWorkspaceFile(workspace, '.reports/b-suite/bitmaps_test/run-b/ref.png', 'b-ref');
-    writeWorkspaceFile(workspace, '.reports/b-suite/bitmaps_test/run-b/report.json', JSON.stringify({ id: 'b-suite', testSuite: 'b-suite', tests: [{ status: 'pass', pair: { reference: 'run-b/ref.png' } }] }));
+    writeWorkspaceFile(
+      workspace,
+      '.reports/b-suite/bitmaps_test/run-b/report.json',
+      JSON.stringify({ id: 'b-suite', testSuite: 'b-suite', tests: [{ status: 'pass', pair: { reference: 'run-b/ref.png' } }] })
+    );
     writeWorkspaceFile(workspace, '.reports/a-suite/html_report/config.js', "'bitmaps_test/run-a/ref.png'");
-    writeWorkspaceFile(workspace, '.reports/a-suite/html_report/index.html', '<html><head></head><body><script src="config.js"></script></body></html>');
+    writeWorkspaceFile(
+      workspace,
+      '.reports/a-suite/html_report/index.html',
+      '<html><head></head><body><script src="config.js"></script></body></html>'
+    );
     writeWorkspaceFile(workspace, '.reports/a-suite/bitmaps_test/run-a/ref.png', 'a-ref');
-    writeWorkspaceFile(workspace, '.reports/a-suite/bitmaps_test/run-a/report.json', JSON.stringify({ id: 'a-suite', testSuite: 'a-suite', tests: [{ status: 'pass', pair: { reference: 'run-a/ref.png' } }] }));
+    writeWorkspaceFile(
+      workspace,
+      '.reports/a-suite/bitmaps_test/run-a/report.json',
+      JSON.stringify({ id: 'a-suite', testSuite: 'a-suite', tests: [{ status: 'pass', pair: { reference: 'run-a/ref.png' } }] })
+    );
 
     snapshot({ configs: [{ id: 'b-suite' }, { id: 'a-suite' }] as never, backstopDirName: '.reports' });
 

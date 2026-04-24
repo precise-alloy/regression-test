@@ -5,7 +5,7 @@ module.exports = async (page, scenario, viewport, isReference, browserContext) =
 
     if (browserName === 'chromium') {
       const session = await browserContext.newCDPSession(page);
-      await session.send('Page.setbypassCsp', { enabled: true });
+      await session.send('Page.setBypassCSP', { enabled: true });
     } else {
       console.warn(`Playwright bypassCsp is only supported with chromium. Current browser: ${browserName ?? 'unknown'}`);
     }

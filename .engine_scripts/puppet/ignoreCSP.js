@@ -6,7 +6,7 @@
  * Allows `ignoreHTTPSErrors: true` BUT... requires `debugWindow: true`
  *
  * see https://github.com/GoogleChrome/puppeteer/issues/1229#issuecomment-380133332
- * this is the workaround until Page.setbypassCsp lands... https://github.com/GoogleChrome/puppeteer/pull/2324
+ * this is the workaround until native page CSP bypass lands... https://github.com/GoogleChrome/puppeteer/pull/2324
  *
  * @param      {REQUEST}  request
  * @return     {VOID}

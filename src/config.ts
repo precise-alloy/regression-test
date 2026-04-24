@@ -185,7 +185,7 @@ export function resolveViewports(
   s: ScenarioModel,
   data: TestSuiteModel,
   ws: WorkspaceConfig,
-  viewports?: ViewportNext[],
+  viewports?: ViewportNext[]
 ): ViewportNext[] | undefined {
   const names = s.viewportNames ?? data.viewportNames ?? ws.viewportNames;
 
@@ -223,7 +223,7 @@ export function resolveScenarioOptions({
   total,
   viewports,
 }: ResolveScenarioOptionsInput): ScenarioModel {
-  const requiredLogin = globalRequiredLogin ? true : resolveStrictBoolean(scenario.requiredLogin, workspace.requiredLogin) ?? false;
+  const requiredLogin = globalRequiredLogin ? true : (resolveStrictBoolean(scenario.requiredLogin, workspace.requiredLogin) ?? false);
 
   return {
     ...scenario,
@@ -246,18 +246,11 @@ export function resolveScenarioOptions({
     viewports: resolveViewports(scenario, suite, workspace, viewports),
     referenceUrl: !isRef ? scenario.url : undefined,
     misMatchThreshold: scenario.misMatchThreshold ?? suite.misMatchThreshold ?? workspace.misMatchThreshold ?? DEFAULT_MISMATCH_THRESHOLD,
-    postInteractionWait:
-      scenario.postInteractionWait ?? suite.postInteractionWait ?? workspace.postInteractionWait ?? DEFAULT_POST_INTERACTION_WAIT,
+    postInteractionWait: scenario.postInteractionWait ?? suite.postInteractionWait ?? workspace.postInteractionWait ?? DEFAULT_POST_INTERACTION_WAIT,
   };
 }
 
-export function getScenarios(
-  args: string[],
-  testSuite: string,
-  isRef: boolean,
-  globalRequiredLogin: boolean,
-  ws: WorkspaceConfig,
-) {
+export function getScenarios(args: string[], testSuite: string, isRef: boolean, globalRequiredLogin: boolean, ws: WorkspaceConfig) {
   const scenarios: Scenario[] = [];
 
   const data = getData(testSuite);
@@ -349,11 +342,7 @@ export function getConfigs(args: string[], backstopDirName: string): Config[] {
     const debug = data?.debug ?? ws.debug;
     const state = data?.state ?? ws.state;
     const ignoreSslErrors =
-      typeof data?.ignoreSslErrors === 'boolean'
-        ? data.ignoreSslErrors
-        : typeof ws.ignoreSslErrors === 'boolean'
-          ? ws.ignoreSslErrors
-          : true;
+      typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : typeof ws.ignoreSslErrors === 'boolean' ? ws.ignoreSslErrors : true;
 
     const config = {
       id: testSuite,

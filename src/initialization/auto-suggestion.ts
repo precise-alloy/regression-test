@@ -43,11 +43,7 @@ export function mergeRegressifySettings(settings: Settings): Settings {
 
   const yamlSchema = nextSettings['yaml.schemas'] || {};
   Object.keys(yamlSchema).forEach((key) => {
-    if (
-      key.includes('test-schema.json') ||
-      key.includes('replacement-profiles-schema.json') ||
-      key.includes('regressify-schema.json')
-    ) {
+    if (key.includes('test-schema.json') || key.includes('replacement-profiles-schema.json') || key.includes('regressify-schema.json')) {
       delete yamlSchema[key];
     }
   });

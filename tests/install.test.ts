@@ -13,17 +13,14 @@ describe('install.ts', () => {
       },
     };
 
-    const targets = getBrowserInstallTargets(
-      resolver,
-      (() =>
-        JSON.stringify({
-          browsers: [
-            { name: 'webkit', browserVersion: '17' },
-            { name: 'chromium', browserVersion: '126' },
-            { name: 'firefox', browserVersion: '127' },
-          ],
-        })) as never,
-    );
+    const targets = getBrowserInstallTargets(resolver, (() =>
+      JSON.stringify({
+        browsers: [
+          { name: 'webkit', browserVersion: '17' },
+          { name: 'chromium', browserVersion: '126' },
+          { name: 'firefox', browserVersion: '127' },
+        ],
+      })) as never);
 
     expect(targets).toEqual([
       { name: 'chromium', browserVersion: '126' },
@@ -38,10 +35,10 @@ describe('install.ts', () => {
     };
 
     expect(() =>
-      getBrowserInstallTargets(
-        resolver,
-        (() => JSON.stringify({ browsers: [{ name: 'chromium' }, { name: 'firefox', browserVersion: '127' }, { name: 'webkit', browserVersion: '17' }] })) as never,
-      ),
+      getBrowserInstallTargets(resolver, (() =>
+        JSON.stringify({
+          browsers: [{ name: 'chromium' }, { name: 'firefox', browserVersion: '127' }, { name: 'webkit', browserVersion: '17' }],
+        })) as never)
     ).toThrow(/chromium/);
   });
 
@@ -88,13 +85,7 @@ describe('install.ts', () => {
 
     expect(spawn).toHaveBeenCalledTimes(1);
     expect(spawn.mock.calls[0][0]).toBe('/node');
-    expect(spawn.mock.calls[0][1]).toEqual([
-      expect.stringMatching(/playwright[\\/]cli\.js$/),
-      'install',
-      'chromium',
-      'firefox',
-      'webkit',
-    ]);
+    expect(spawn.mock.calls[0][1]).toEqual([expect.stringMatching(/playwright[\\/]cli\.js$/), 'install', 'chromium', 'firefox', 'webkit']);
     expect(spawn.mock.calls[0][2]).toEqual(expect.objectContaining({ stdio: 'inherit' }));
     expect(exitFn).not.toHaveBeenCalled();
     expect(log).toHaveBeenCalled();

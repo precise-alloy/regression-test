@@ -30,9 +30,7 @@ export async function migrate() {
         const fileName = basename(file);
         const source = slash(path.join(oldDataFolder, fileName));
 
-        if (
-          COMMON_MIGRATION_FILES.includes(fileName)
-        ) {
+        if (COMMON_MIGRATION_FILES.includes(fileName)) {
           const destination = getMigrationDestination(fileName, commonFolder, visualTestsFolder);
           fs.mkdirSync(path.dirname(destination), { recursive: true });
 

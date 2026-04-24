@@ -62,7 +62,7 @@ describe('scenarios.ts', () => {
         testSuite: 'alloy',
         index: '1',
         total: 1,
-      } as never),
+      } as never)
     ).toThrow();
   });
 });

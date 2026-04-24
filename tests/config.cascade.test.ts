@@ -156,7 +156,7 @@ describe('config cascade and final Backstop config assembly', () => {
         'debug: true',
         'state: workspace-state',
         `viewportsPath: ${customViewportPath.replaceAll('\\', '/')}`,
-      ].join('\n'),
+      ].join('\n')
     );
     writeWorkspaceFile(workspace, 'common/custom-viewports.yaml', '- label: desktop\n  width: 1280\n  height: 720\n');
     writeWorkspaceFile(workspace, 'common/_replacement-profiles.yaml', 'profiles: {}\n');
@@ -164,13 +164,7 @@ describe('config cascade and final Backstop config assembly', () => {
     writeWorkspaceFile(
       workspace,
       'visual_tests/alloy.tests.yaml',
-      [
-        'browser: webkit',
-        'asyncCaptureLimit: 9',
-        'scenarios:',
-        '  - url: https://example.com',
-        '    description: home page',
-      ].join('\n'),
+      ['browser: webkit', 'asyncCaptureLimit: 9', 'scenarios:', '  - url: https://example.com', '    description: home page'].join('\n')
     );
     useWorkspace(workspace);
 
@@ -190,17 +184,10 @@ describe('config cascade and final Backstop config assembly', () => {
     vi.stubEnv('GITHUB_ACTIONS', 'true');
 
     const workspace = createTempWorkspace({
-      'regressify.yaml': [
-        'debug: true',
-        'state: missing-state',
-      ].join('\n'),
+      'regressify.yaml': ['debug: true', 'state: missing-state'].join('\n'),
       'common/_viewports.yaml': '- label: desktop\n  width: 1280\n  height: 720\n',
       'common/_replacement-profiles.yaml': 'profiles: {}\n',
-      'visual_tests/alloy.tests.yaml': [
-        'scenarios:',
-        '  - url: https://example.com',
-        '    description: home page',
-      ].join('\n'),
+      'visual_tests/alloy.tests.yaml': ['scenarios:', '  - url: https://example.com', '    description: home page'].join('\n'),
     });
     useWorkspace(workspace);
 

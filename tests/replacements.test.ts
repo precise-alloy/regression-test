@@ -55,9 +55,7 @@ describe('replacements.ts', () => {
   });
 
   it('applies regex replacements with flags across multiple case-insensitive matches', () => {
-    const output = applyReplacements('https://prod.example.com/PROD/prod', [
-      { ref: 'prod', test: 'stage', regex: true, flags: 'gi' },
-    ]);
+    const output = applyReplacements('https://prod.example.com/PROD/prod', [{ ref: 'prod', test: 'stage', regex: true, flags: 'gi' }]);
 
     expect(output).toBe('https://stage.example.com/stage/stage');
   });

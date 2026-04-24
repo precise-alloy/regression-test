@@ -45,33 +45,33 @@ Vitest fits this repo well because it gives us:
 There are three distinct validation layers. They solve different problems and
 should not be treated as interchangeable.
 
-| Layer | Command | Purpose | Typical failure meaning |
-| --- | --- | --- | --- |
-| Fast unit suite | `npm run test:unit` | Validate behavior and regressions quickly while editing | A specific code path changed behavior or a mock assumption is stale |
-| Coverage gate | `npm run test:coverage` or `npm run test:ci` | Ensure important branches stay exercised | New logic was added without enough tests, or a file moved below the minimum signal threshold |
-| Smoke runtime check | `npm run ref -- --test-suite alloy` | Validate the actual CLI, config assembly, Playwright wiring, and Backstop reference flow | A real runtime integration path broke even if isolated unit tests still pass |
+| Layer               | Command                                      | Purpose                                                                                  | Typical failure meaning                                                                      |
+| ------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Fast unit suite     | `npm run test:unit`                          | Validate behavior and regressions quickly while editing                                  | A specific code path changed behavior or a mock assumption is stale                          |
+| Coverage gate       | `npm run test:coverage` or `npm run test:ci` | Ensure important branches stay exercised                                                 | New logic was added without enough tests, or a file moved below the minimum signal threshold |
+| Smoke runtime check | `npm run ref -- --test-suite alloy`          | Validate the actual CLI, config assembly, Playwright wiring, and Backstop reference flow | A real runtime integration path broke even if isolated unit tests still pass                 |
 
 ## Command reference
 
-| Command | When to use it | Notes |
-| --- | --- | --- |
-| `npm run test:unit` | Normal development loop | Runs the whole unit suite once |
-| `npm run test:unit:watch` | TDD or local iteration | Re-runs tests on change |
-| `npm run test:coverage` | Before merging bigger changes | Prints the full coverage table and enforces thresholds |
-| `npm run test:ci` | CI and release gates | Same threshold enforcement with a terser reporter |
-| `npm run build` | Before publishing or after type-heavy refactors | Confirms the TypeScript project still compiles |
-| `npm run ref -- --test-suite alloy` | Smoke validation | Generates reference snapshots for the checked suite |
+| Command                             | When to use it                                  | Notes                                                  |
+| ----------------------------------- | ----------------------------------------------- | ------------------------------------------------------ |
+| `npm run test:unit`                 | Normal development loop                         | Runs the whole unit suite once                         |
+| `npm run test:unit:watch`           | TDD or local iteration                          | Re-runs tests on change                                |
+| `npm run test:coverage`             | Before merging bigger changes                   | Prints the full coverage table and enforces thresholds |
+| `npm run test:ci`                   | CI and release gates                            | Same threshold enforcement with a terser reporter      |
+| `npm run build`                     | Before publishing or after type-heavy refactors | Confirms the TypeScript project still compiles         |
+| `npm run ref -- --test-suite alloy` | Smoke validation                                | Generates reference snapshots for the checked suite    |
 
 ## Coverage policy
 
 The current global thresholds are defined in `vitest.config.ts`.
 
-| Metric | Minimum |
-| --- | --- |
-| Lines | `94` |
-| Statements | `94` |
-| Functions | `94` |
-| Branches | `90` |
+| Metric     | Minimum |
+| ---------- | ------- |
+| Lines      | `94`    |
+| Statements | `94`    |
+| Functions  | `94`    |
+| Branches   | `90`    |
 
 These numbers are intentionally high enough to stop silent erosion, while still
 allowing a small amount of wrapper code or defensive error handling to remain
@@ -106,38 +106,38 @@ flowchart LR
 The `tests/` directory is organized by production module, with a shared utility
 file for temporary workspaces and file creation.
 
-| File | Focus |
-| --- | --- |
-| `tests/test-utils.ts` | Temporary workspace creation, workspace switching, helper file writes |
-| `tests/index.test.ts` | CLI command routing |
-| `tests/helpers.test.ts` | Generic CLI and file helpers |
-| `tests/replacements.test.ts` | Replacement profile resolution and URL rewriting |
-| `tests/state.test.ts` | State path helpers |
-| `tests/scenarios.test.ts` | Scenario creation defaults |
-| `tests/config.loaders.test.ts` | Workspace config loading, suite discovery, file loading |
-| `tests/config.needs.test.ts` | `needs` expansion and cycle detection |
-| `tests/config.cascade.test.ts` | Final config cascade and Backstop config assembly |
-| `tests/snapshot.test.ts` | Report hashing, cleanup, summary generation |
-| `tests/install.test.ts` | Playwright browser metadata lookup and installation flow |
-| `tests/initialization.test.ts` | Project bootstrap helpers and file patching |
-| `tests/regressify.test.ts` | Compare report patching and Backstop command orchestration |
+| File                           | Focus                                                                 |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `tests/test-utils.ts`          | Temporary workspace creation, workspace switching, helper file writes |
+| `tests/index.test.ts`          | CLI command routing                                                   |
+| `tests/helpers.test.ts`        | Generic CLI and file helpers                                          |
+| `tests/replacements.test.ts`   | Replacement profile resolution and URL rewriting                      |
+| `tests/state.test.ts`          | State path helpers                                                    |
+| `tests/scenarios.test.ts`      | Scenario creation defaults                                            |
+| `tests/config.loaders.test.ts` | Workspace config loading, suite discovery, file loading               |
+| `tests/config.needs.test.ts`   | `needs` expansion and cycle detection                                 |
+| `tests/config.cascade.test.ts` | Final config cascade and Backstop config assembly                     |
+| `tests/snapshot.test.ts`       | Report hashing, cleanup, summary generation                           |
+| `tests/install.test.ts`        | Playwright browser metadata lookup and installation flow              |
+| `tests/initialization.test.ts` | Project bootstrap helpers and file patching                           |
+| `tests/regressify.test.ts`     | Compare report patching and Backstop command orchestration            |
 
 ## Module-to-test mapping
 
 Use this table when changing runtime behavior. If you touch one of these files,
 start by updating the matching test file.
 
-| Production module | Primary tests | Main behavior under test |
-| --- | --- | --- |
-| `src/index.ts` | `tests/index.test.ts` | Command dispatch for `init`, `install`, `ref`, `approve`, `test`, `snapshot`, `version` |
-| `src/config.ts` | `tests/config.loaders.test.ts`, `tests/config.needs.test.ts`, `tests/config.cascade.test.ts` | CLI argument interpretation, workspace config loading, scenario cascade, CI behavior |
-| `src/replacements.ts` | `tests/replacements.test.ts` | Replacement profile lookup and URL generation |
-| `src/snapshot.ts` | `tests/snapshot.test.ts` | Hashing, report rewriting, cleanup, html summary generation |
-| `src/install.ts` | `tests/install.test.ts` | Browser metadata discovery and Playwright install process |
-| `src/regressify.ts` | `tests/regressify.test.ts` | HTML patching and Backstop orchestration |
-| `src/scenarios.ts` | `tests/scenarios.test.ts` | Scenario defaults and shaping |
-| `src/state.ts` | `tests/state.test.ts` | State file and path helpers |
-| `src/initialization/*.ts` | `tests/initialization.test.ts` | Bootstrap file creation, schema wiring, migrations, and project patching |
+| Production module         | Primary tests                                                                                | Main behavior under test                                                                |
+| ------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `src/index.ts`            | `tests/index.test.ts`                                                                        | Command dispatch for `init`, `install`, `ref`, `approve`, `test`, `snapshot`, `version` |
+| `src/config.ts`           | `tests/config.loaders.test.ts`, `tests/config.needs.test.ts`, `tests/config.cascade.test.ts` | CLI argument interpretation, workspace config loading, scenario cascade, CI behavior    |
+| `src/replacements.ts`     | `tests/replacements.test.ts`                                                                 | Replacement profile lookup and URL generation                                           |
+| `src/snapshot.ts`         | `tests/snapshot.test.ts`                                                                     | Hashing, report rewriting, cleanup, html summary generation                             |
+| `src/install.ts`          | `tests/install.test.ts`                                                                      | Browser metadata discovery and Playwright install process                               |
+| `src/regressify.ts`       | `tests/regressify.test.ts`                                                                   | HTML patching and Backstop orchestration                                                |
+| `src/scenarios.ts`        | `tests/scenarios.test.ts`                                                                    | Scenario defaults and shaping                                                           |
+| `src/state.ts`            | `tests/state.test.ts`                                                                        | State file and path helpers                                                             |
+| `src/initialization/*.ts` | `tests/initialization.test.ts`                                                               | Bootstrap file creation, schema wiring, migrations, and project patching                |
 
 ## Test design rules
 
@@ -154,13 +154,13 @@ When adding or updating tests, keep the suite deterministic and local.
 
 Different failures imply different repair strategies.
 
-| Failure type | What it usually means | What to inspect first |
-| --- | --- | --- |
-| Single unit test failure | A local behavior changed | The production module paired with that test file |
-| Many failures in one module group | A shared helper or common fixture changed | The shared helper imported by the failing tests |
-| Coverage threshold failure with green tests | New logic is untested | The coverage table and uncovered branch lines |
-| `npm run build` failure | Type contracts, imports, or emitted signatures drifted | The first TypeScript error in the build output |
-| Smoke command failure | Runtime integration broke | `src/index.ts`, `src/config.ts`, `src/regressify.ts`, Playwright/Backstop wiring |
+| Failure type                                | What it usually means                                  | What to inspect first                                                            |
+| ------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Single unit test failure                    | A local behavior changed                               | The production module paired with that test file                                 |
+| Many failures in one module group           | A shared helper or common fixture changed              | The shared helper imported by the failing tests                                  |
+| Coverage threshold failure with green tests | New logic is untested                                  | The coverage table and uncovered branch lines                                    |
+| `npm run build` failure                     | Type contracts, imports, or emitted signatures drifted | The first TypeScript error in the build output                                   |
+| Smoke command failure                       | Runtime integration broke                              | `src/index.ts`, `src/config.ts`, `src/regressify.ts`, Playwright/Backstop wiring |
 
 ## How to add tests for new behavior
 

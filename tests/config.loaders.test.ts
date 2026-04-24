@@ -94,7 +94,7 @@ describe('config loaders and environment helpers', () => {
         SYSTEM_TEAMFOUNDATIONCOLLECTIONURI: 'collection',
         SYSTEM_TEAMPROJECT: 'project',
         SYSTEM_COLLECTIONURI: 'collection-uri',
-      } as NodeJS.ProcessEnv),
+      } as NodeJS.ProcessEnv)
     ).toBe(true);
     expect(isCIEnvironment({ CI: 'true' } as NodeJS.ProcessEnv)).toBe(true);
     expect(isCIEnvironment({} as NodeJS.ProcessEnv)).toBe(false);

@@ -42,7 +42,7 @@ export function getDependencyResolver(): DependencyResolver {
 
 export function getBrowserInstallTargets(
   dependencyResolver: DependencyResolver = getDependencyResolver(),
-  readFileSync: typeof fs.readFileSync = fs.readFileSync,
+  readFileSync: typeof fs.readFileSync = fs.readFileSync
 ): BrowserInstallTarget[] {
   const playwrightCorePackageJsonPath = dependencyResolver.resolve('playwright-core/package.json');
   const browsersJsonPath = path.join(path.dirname(playwrightCorePackageJsonPath), 'browsers.json');

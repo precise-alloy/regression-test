@@ -46,10 +46,7 @@ describe('regressify.ts', () => {
     writeWorkspaceFile(workspace, 'node_modules/backstopjs/compare/output/index.html', '<html><head></head><body></body></html>');
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    const backstopMock = vi
-      .fn()
-      .mockResolvedValueOnce(undefined)
-      .mockRejectedValueOnce(new Error('failure'));
+    const backstopMock = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('failure'));
     const getConfigsMock = vi.fn(() => [{ id: 'suite-a' }, { id: 'suite-b' }]);
 
     vi.doMock('backstopjs', () => ({ default: backstopMock }));

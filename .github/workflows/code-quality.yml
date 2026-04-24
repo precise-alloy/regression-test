@@ -1,0 +1,152 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches:
+      - master
+      - release
+
+  push:
+    branches:
+      - master
+      - release
+
+  schedule:
+    - cron: '17 5 * * 1'
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          license-check: false
+
+  unit-quality:
+    if: github.event_name != 'schedule'
+    name: Unit Quality (Node ${{ matrix.node-version }})
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.x
+          - 24.x
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check source
+        run: npm run typecheck
+
+      - name: Run unit tests with coverage gate
+        run: npm run test:ci
+
+      - name: Build package
+        if: matrix.node-version == '24.x'
+        run: npm run build
+
+      - name: Upload coverage artifact
+        if: always() && matrix.node-version == '24.x' && hashFiles('coverage/**/*') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-node-${{ matrix.node-version }}
+          path: coverage
+
+      - name: Publish coverage summary
+        if: always() && matrix.node-version == '24.x' && hashFiles('coverage/coverage-summary.json') != ''
+        shell: bash
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+
+          const summaryPath = 'coverage/coverage-summary.json';
+          const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8')).total;
+          const metrics = ['lines', 'functions', 'statements', 'branches'];
+          const rows = metrics.map((metric) => {
+            const value = summary[metric]?.pct ?? 0;
+            return `| ${metric} | ${value.toFixed(2)}% |`;
+          });
+
+          const markdown = [
+            '## Coverage Summary',
+            '',
+            '| Metric | Coverage |',
+            '| --- | ---: |',
+            ...rows,
+            '',
+            'Coverage thresholds are enforced by the test runner configuration.',
+            '',
+          ].join('\n');
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
+          EOF
+
+  codeql:
+    name: CodeQL (JavaScript/TypeScript)
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - javascript
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.x'
+          cache: npm
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}

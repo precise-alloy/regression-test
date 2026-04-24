@@ -1,0 +1,12 @@
+name: regressify-codeql
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+paths:
+  - src
+
+paths-ignore:
+  - src/**/*.d.ts
+  - src/**/*.js

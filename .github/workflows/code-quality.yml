@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -89,28 +90,20 @@ jobs:
 
           const summaryPath = 'coverage/coverage-summary.json';
           const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8')).total;
-          const thresholds = {
-            lines: 94,
-            functions: 94,
-            statements: 94,
-            branches: 90,
-          };
           const metrics = ['lines', 'functions', 'statements', 'branches'];
           const rows = metrics.map((metric) => {
             const value = summary[metric]?.pct ?? 0;
-            const threshold = thresholds[metric];
-            const status = value >= threshold ? 'PASS' : 'FAIL';
-            return `| ${metric} | ${value.toFixed(2)}% | ${threshold}% | ${status} |`;
+            return `| ${metric} | ${value.toFixed(2)}% |`;
           });
 
           const markdown = [
             '## Coverage Summary',
             '',
-            '| Metric | Coverage | Threshold | Status |',
-            '| --- | ---: | ---: | :---: |',
+            '| Metric | Coverage |',
+            '| --- | ---: |',
             ...rows,
             '',
-            'Full HTML coverage report is attached as a workflow artifact.',
+            'Coverage thresholds are enforced by the test runner configuration.',
             '',
           ].join('\n');
 

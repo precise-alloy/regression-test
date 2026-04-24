@@ -143,6 +143,13 @@ describe('config cascade and final Backstop config assembly', () => {
   });
 
   it('builds final configs with workspace defaults, suite overrides, state files, and non-CI debug behavior', () => {
+    vi.stubEnv('CI', 'false');
+    vi.stubEnv('GITHUB_ACTIONS', 'false');
+    vi.stubEnv('TF_BUILD', '');
+    vi.stubEnv('SYSTEM_COLLECTIONURI', '');
+    vi.stubEnv('SYSTEM_TEAMFOUNDATIONCOLLECTIONURI', '');
+    vi.stubEnv('SYSTEM_DEFINITIONID', '');
+
     const workspace = createTempWorkspace();
     const customViewportPath = path.join(workspace, 'common', 'custom-viewports.yaml');
     writeWorkspaceFile(

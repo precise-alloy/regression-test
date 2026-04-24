@@ -53,8 +53,11 @@ describe('helpers.ts', () => {
 
   it('resolves the library path from the current module url', () => {
     const libraryPath = normalizeSlashes(getLibraryPath());
+    const packageJsonPath = path.join(libraryPath, 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as { name?: string };
 
-    expect(libraryPath).toMatch(/\/regressify$/);
-    expect(fs.existsSync(path.join(libraryPath, 'package.json'))).toBe(true);
+    expect(fs.existsSync(packageJsonPath)).toBe(true);
+    expect(fs.existsSync(path.join(libraryPath, 'src', 'index.ts'))).toBe(true);
+    expect(packageJson.name).toBe('regressify');
   });
 });

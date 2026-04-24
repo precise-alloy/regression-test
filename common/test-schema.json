@@ -76,6 +76,9 @@
         "postInteractionWait": {
           "type": "number"
         },
+        "bypassCsp": {
+          "type": "boolean"
+        },
         "state": {
           "oneOf": [
             {
@@ -253,6 +256,9 @@
         },
         "postInteractionWait": {
           "type": "number"
+        },
+        "bypassCsp": {
+          "type": "boolean"
         }
       },
       "required": [

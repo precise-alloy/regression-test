@@ -16,8 +16,61 @@ type Settings = {
   'yaml.schemaStore.enable'?: boolean;
 };
 
+export type { Settings };
+
 export async function addAutoSuggestion() {
   patchVsCodeSettings();
+}
+
+export function mergeRegressifySettings(settings: Settings): Settings {
+  const nextSettings = JSON.parse(JSON.stringify(settings || {})) as Settings;
+  const jsonSchemas = nextSettings['json.schemas'] || [];
+  let existingJsonSchema: JsonSchema | undefined;
+
+  do {
+    existingJsonSchema = jsonSchemas.find((js) => js.fileMatch && js.fileMatch.includes('/*.tests.json'));
+    if (existingJsonSchema) {
+      jsonSchemas.splice(jsonSchemas.indexOf(existingJsonSchema), 1);
+    }
+  } while (existingJsonSchema);
+
+  jsonSchemas.push({
+    fileMatch: ['/*.tests.json'],
+    url: './common/test-schema.json',
+  });
+
+  nextSettings['json.schemas'] = jsonSchemas;
+
+  const yamlSchema = nextSettings['yaml.schemas'] || {};
+  Object.keys(yamlSchema).forEach((key) => {
+    if (
+      key.includes('test-schema.json') ||
+      key.includes('replacement-profiles-schema.json') ||
+      key.includes('regressify-schema.json')
+    ) {
+      delete yamlSchema[key];
+    }
+  });
+
+  nextSettings['yaml.schemas'] = {
+    ...yamlSchema,
+    './common/test-schema.json': '/*.tests.{yaml,yml}',
+    './common/replacement-profiles-schema.json': '/_replacement-profiles.{yaml,yml}',
+    './common/regressify-schema.json': '/regressify.{yaml,yml}',
+  };
+
+  const filesExclude = nextSettings['files.exclude'] || {};
+  filesExclude['common/test-schema.json'] = true;
+  filesExclude['common/replacement-profiles-schema.json'] = true;
+  filesExclude['common/regressify-schema.json'] = true;
+  filesExclude['.vscode'] = true;
+  filesExclude['**/node_modules'] = true;
+  filesExclude['.idea'] = true;
+
+  nextSettings['files.exclude'] = filesExclude;
+  nextSettings['yaml.schemaStore.enable'] = false;
+
+  return nextSettings;
 }
 
 function patchVsCodeSettings() {
@@ -25,52 +78,7 @@ function patchVsCodeSettings() {
     const vsCodeFolder = path.join(process.cwd(), '.vscode');
     const settingsJsonPath = path.join(vsCodeFolder, 'settings.json');
     const json = fs.existsSync(settingsJsonPath) ? fs.readFileSync(settingsJsonPath, 'utf8') : '{}';
-    const settings = JSON.parse(json) as Settings;
-
-    const jsonSchemas = settings['json.schemas'] || [];
-    let existingJsonSchema: JsonSchema | undefined;
-
-    do {
-      existingJsonSchema = jsonSchemas.find((js) => js.fileMatch && js.fileMatch.includes('/*.tests.json'));
-      if (existingJsonSchema) {
-        jsonSchemas.splice(jsonSchemas.indexOf(existingJsonSchema), 1);
-      }
-    } while (existingJsonSchema);
-
-    jsonSchemas.push({
-      fileMatch: ['/*.tests.json'],
-      url: './common/test-schema.json',
-    });
-
-    settings['json.schemas'] = jsonSchemas;
-
-    const yamlSchema = settings['yaml.schemas'] || {};
-
-    // Check for each of `settings['yaml.schemas']`,
-    // if the key contains `test-schema.json` or `replacement-profiles-schema.json`,
-    // then remove it.
-    Object.keys(yamlSchema).forEach((key) => {
-      if (key.includes('test-schema.json') || key.includes('replacement-profiles-schema.json')) {
-        delete yamlSchema[key];
-      }
-    });
-
-    settings['yaml.schemas'] = {
-      ...yamlSchema,
-      './common/test-schema.json': '/*.tests.{yaml,yml}',
-      './common/replacement-profiles-schema.json': '/_replacement-profiles.{yaml,yml}',
-    };
-
-    const filesExclude = settings['files.exclude'] || {};
-    filesExclude['common/test-schema.json'] = true;
-    filesExclude['common/replacement-profiles-schema.json'] = true;
-    filesExclude['.vscode'] = true;
-    filesExclude['**/node_modules'] = true;
-    filesExclude['.idea'] = true;
-
-    settings['files.exclude'] = filesExclude;
-
-    settings['yaml.schemaStore.enable'] = false;
+    const settings = mergeRegressifySettings(JSON.parse(json) as Settings);
 
     if (!fs.existsSync(vsCodeFolder)) {
       fs.mkdirSync(vsCodeFolder, { recursive: true });

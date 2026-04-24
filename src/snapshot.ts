@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import crypto from 'node:crypto';
 import { BackstopReport, BackstopTest, HtmlReportSummary } from './types';
 
-function calculateFileHash(filePath: string): string {
+export function calculateFileHash(filePath: string): string {
   const content = fs.readFileSync(filePath);
   const sha1Hash = crypto.createHash('sha1');
 
@@ -13,14 +13,55 @@ function calculateFileHash(filePath: string): string {
   return sha1Hash.digest('base64url').substring(0, 10);
 }
 
-function calculateTextHash(text: string): string {
+export function calculateTextHash(text: string): string {
   const sha1Hash = crypto.createHash('sha1');
 
   sha1Hash.update(text);
   return sha1Hash.digest('base64url').substring(0, 10);
 }
 
-function processTestSuite(backstopDir: string, config: Config, hashes: Record<string, string>): HtmlReportSummary | null {
+export function applyHashesToConfigText(configText: string, hashes: Record<string, string>): string {
+  let modifiedConfigText = configText;
+
+  for (const [filePath, hash] of Object.entries(hashes)) {
+    const pathVariants = [filePath];
+    if (!filePath.startsWith('bitmaps_test/')) {
+      pathVariants.push(`bitmaps_test/${filePath}`);
+    }
+
+    for (const variant of pathVariants) {
+      const escapedVariant = variant.replaceAll('\\', '\\\\');
+
+      if (modifiedConfigText.includes(variant) || modifiedConfigText.includes(escapedVariant)) {
+        modifiedConfigText = modifiedConfigText
+          .replaceAll("'" + variant + "'", "'" + `${variant}?v=${hash}` + "'")
+          .replaceAll('"' + variant + '"', '"' + `${variant}?v=${hash}` + '"')
+          .replaceAll("'" + escapedVariant + "'", "'" + `${escapedVariant}?v=${hash}` + "'")
+          .replaceAll('"' + escapedVariant + '"', '"' + `${escapedVariant}?v=${hash}` + '"');
+      }
+    }
+  }
+
+  return modifiedConfigText;
+}
+
+export function applyConfigHashToHtmlIndex(htmlIndexText: string, configHash: string): string {
+  return htmlIndexText.replaceAll("'config.js'", `'config.js?v=${configHash}'`).replaceAll('"config.js"', `"config.js?v=${configHash}"`);
+}
+
+export function summarizeReport(report: BackstopReport): HtmlReportSummary {
+  const totalPassed = report?.tests?.filter((t) => t.status === 'pass').length ?? 0;
+  const totalFailed = report?.tests?.filter((t) => t.status === 'fail').length ?? 0;
+
+  return {
+    id: report.id,
+    totalTests: report?.tests?.length ?? 0,
+    totalPassed,
+    totalFailed,
+  };
+}
+
+export function processTestSuite(backstopDir: string, config: Config, hashes: Record<string, string>): HtmlReportSummary | null {
   const testDir = path.join(backstopDir, config.id);
   if (!fs.existsSync(testDir)) {
     console.log(chalk.red(`Test directory does not exist: ${testDir}`));
@@ -31,6 +72,10 @@ function processTestSuite(backstopDir: string, config: Config, hashes: Record<st
   const bitmapTestDir = path.join(testDir, 'bitmaps_test');
 
   if (!fs.existsSync(htmlReportDir)) {
+    return null;
+  }
+
+  if (!fs.existsSync(bitmapTestDir)) {
     return null;
   }
 
@@ -48,6 +93,8 @@ function processTestSuite(backstopDir: string, config: Config, hashes: Record<st
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
+  let summary: HtmlReportSummary | null = null;
+
   for (const subDir of subDirs) {
     const subDirFullPath = path.join(bitmapTestDir, subDir);
 
@@ -61,8 +108,7 @@ function processTestSuite(backstopDir: string, config: Config, hashes: Record<st
       if (fs.existsSync(reportJsonPath)) {
         const reportText = fs.readFileSync(reportJsonPath, 'utf-8');
         const report = JSON.parse(reportText) as BackstopReport;
-        const passCount = report?.tests?.filter((t) => t.status === 'pass').length ?? 0;
-        const failCount = report?.tests?.filter((t) => t.status === 'fail').length ?? 0;
+        const reportSummary = summarizeReport(report);
 
         if (report?.tests) {
           [].forEach.call(report.tests, (test: BackstopTest) => {
@@ -101,41 +147,47 @@ function processTestSuite(backstopDir: string, config: Config, hashes: Record<st
           });
         }
 
-        let modifiedConfigText = configText;
-        for (const [filePath, hash] of Object.entries(hashes)) {
-          if (modifiedConfigText.includes(filePath)) {
-            modifiedConfigText = modifiedConfigText
-              .replaceAll("'" + filePath + "'", "'" + `${filePath}?v=${hash}` + "'")
-              .replaceAll('"' + filePath + '"', '"' + `${filePath}?v=${hash}` + '"')
-              .replaceAll("'" + filePath.replaceAll('\\', '\\\\') + "'", "'" + `${filePath.replaceAll('\\', '\\\\')}?v=${hash}` + "'")
-              .replaceAll('"' + filePath.replaceAll('\\', '\\\\') + '"', '"' + `${filePath.replaceAll('\\', '\\\\')}?v=${hash}` + '"');
-          }
-        }
+        const modifiedConfigText = applyHashesToConfigText(configText, hashes);
         fs.writeFileSync(configPath, modifiedConfigText, 'utf-8');
 
         const configHash = calculateTextHash(modifiedConfigText);
         const htmlIndexText = fs.readFileSync(htmlIndexPath, 'utf-8');
-        let modifiedHtmlIndexText = htmlIndexText
-          .replaceAll("'config.js'", `'config.js?v=${configHash}'`)
-          .replaceAll('"config.js"', `"config.js?v=${configHash}"`);
+        const modifiedHtmlIndexText = applyConfigHashToHtmlIndex(htmlIndexText, configHash);
         fs.writeFileSync(htmlIndexPath, modifiedHtmlIndexText, 'utf-8');
 
-        console.log(chalk.green(`Snapshot directory: ${subDir}, Passed: ${passCount}, Failed: ${failCount}`));
+        console.log(chalk.green(`Snapshot directory: ${subDir}, Passed: ${reportSummary.totalPassed}, Failed: ${reportSummary.totalFailed}`));
 
-        return {
-          id: report.id,
-          totalTests: report.tests.length,
-          totalPassed: passCount,
-          totalFailed: failCount,
-        };
+        summary = reportSummary;
       }
     }
   }
 
-  return null;
+  return summary;
 }
 
-const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSummary[]) => {
+export function generateSummaryRows(summaries: HtmlReportSummary[]): string {
+  let html = '';
+
+  for (const summary of summaries) {
+    if (!summary) {
+      continue;
+    }
+
+    const successClass = summary.totalPassed === summary.totalTests ? 'class="success"' : '';
+    const dangerClass = summary.totalFailed > 0 ? 'class="danger"' : '';
+
+    html += `<tr>`;
+    html += `<td><a href="./${summary.id}/html_report/index.html">${summary.id}</a></td>`;
+    html += `<td>${summary.totalTests}</td>`;
+    html += `<td ${successClass}>${summary.totalPassed}</td>`;
+    html += `<td ${dangerClass}>${summary.totalFailed}</td>`;
+    html += `</tr>`;
+  }
+
+  return html;
+}
+
+export const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSummary[]) => {
   const htmlTemplate = `<html>
   <head>
     <title>Snapshot Report Summary</title>
@@ -197,25 +249,7 @@ const generateHtmlReportSummary = (backstopDir: string, summaries: HtmlReportSum
   </body>
 </html>
 `;
-  let html = '';
-
-  for (const summary of summaries) {
-    if (!summary) {
-      continue;
-    }
-
-    const successClass = summary.totalPassed === summary.totalTests ? 'class="success"' : '';
-    const dangerClass = summary.totalFailed > 0 ? 'class="danger"' : '';
-
-    html += `<tr>`;
-    html += `<td><a href="./${summary.id}/html_report/index.html">${summary.id}</a></td>`;
-    html += `<td>${summary.totalTests}</td>`;
-    html += `<td ${successClass}>${summary.totalPassed}</td>`;
-    html += `<td ${dangerClass}>${summary.totalFailed}</td>`;
-    html += `</tr>`;
-  }
-
-  const finalHtml = htmlTemplate.replace('<!-- PLACEHOLDER -->', html);
+  const finalHtml = htmlTemplate.replace('<!-- PLACEHOLDER -->', generateSummaryRows(summaries));
 
   const reportPath = path.join(backstopDir, 'index.html');
   fs.writeFileSync(reportPath, finalHtml, 'utf-8');

@@ -15,6 +15,7 @@ common/**/*
 !common/_replacement-profiles.yaml
 !common/replacement-profiles-schema.json
 !common/test-schema.json
+!common/regressify-schema.json
 
 visual_tests/**/*
 !visual_tests/alloy.tests.yaml

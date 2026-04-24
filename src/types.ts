@@ -11,6 +11,39 @@ export interface ReplacementsModel {
   profiles: { [name: string]: ReplacementModel[] };
 }
 
+/**
+ * Workspace-level defaults loaded from `regressify.yaml` (or `.yml`)
+ * at the workspace root. Provides default values for any property
+ * that is not set on the test suite or the scenario.
+ *
+ * Resolution order: scenario → test suite → workspace → hardcoded default.
+ */
+export interface WorkspaceConfig {
+  // Shared with TestSuiteModel
+  urlReplacements?: ReplacementModel[];
+  hideSelectors?: string[];
+  removeSelectors?: string[];
+  useCssOverride?: boolean;
+  cssOverridePath?: string;
+  viewportsPath?: string;
+  debug?: boolean;
+  asyncCaptureLimit?: number;
+  asyncCompareLimit?: number;
+  browser?: 'chromium' | 'firefox' | 'webkit';
+  misMatchThreshold?: number;
+  postInteractionWait?: number;
+  viewportNames?: string | string[];
+  bypassCsp?: boolean;
+  ignoreSslErrors?: boolean;
+  state?: string;
+  // Scenario-only options that make sense as workspace defaults
+  delay?: number;
+  cookiePath?: string;
+  jsOnReadyPath?: string;
+  noScrollTop?: boolean;
+  requiredLogin?: boolean;
+}
+
 export interface TestSuiteModel {
   urlReplacements?: ReplacementModel[];
   scenarios: ScenarioModel[];
@@ -26,6 +59,7 @@ export interface TestSuiteModel {
   misMatchThreshold?: number;
   postInteractionWait?: number;
   viewportNames?: string | string[];
+  bypassCsp?: boolean;
   ignoreSslErrors?: boolean;
   state?: string;
 }
@@ -43,6 +77,7 @@ export interface ScenarioModel extends Scenario {
   total: number;
   viewportNames?: string | string[];
   useCssOverride?: boolean;
+  bypassCsp?: boolean;
   noScrollTop?: boolean;
   misMatchThreshold?: number;
   postInteractionWait?: number;

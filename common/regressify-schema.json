@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/WorkspaceConfig",
+  "definitions": {
+    "WorkspaceConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Workspace-level defaults for Regressify. Any value set here is used when neither the test suite nor the scenario overrides it.",
+      "properties": {
+        "urlReplacements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UrlReplacements"
+          }
+        },
+        "hideSelectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removeSelectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "useCssOverride": {
+          "type": "boolean"
+        },
+        "cssOverridePath": {
+          "type": "string"
+        },
+        "viewportsPath": {
+          "type": "string"
+        },
+        "debug": {
+          "type": "boolean"
+        },
+        "asyncCaptureLimit": {
+          "type": "number"
+        },
+        "asyncCompareLimit": {
+          "type": "number"
+        },
+        "browser": {
+          "type": "string",
+          "oneOf": [
+            {
+              "enum": [
+                "chromium",
+                "firefox",
+                "webkit"
+              ]
+            }
+          ]
+        },
+        "misMatchThreshold": {
+          "type": "number"
+        },
+        "postInteractionWait": {
+          "type": "number"
+        },
+        "viewportNames": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "bypassCsp": {
+          "type": "boolean"
+        },
+        "ignoreSslErrors": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "delay": {
+          "type": "number"
+        },
+        "cookiePath": {
+          "type": "string"
+        },
+        "jsOnReadyPath": {
+          "type": "string"
+        },
+        "noScrollTop": {
+          "type": "boolean"
+        },
+        "requiredLogin": {
+          "type": "boolean"
+        }
+      },
+      "title": "WorkspaceConfig"
+    },
+    "UrlReplacements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "test": {
+          "type": "string"
+        },
+        "regex": {
+          "type": "boolean"
+        },
+        "flags": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref",
+        "test"
+      ],
+      "title": "UrlReplacements"
+    }
+  }
+}

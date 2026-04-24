@@ -20,6 +20,16 @@ ${PATCH_START}
 ${PATCH_END}
 `;
 
+export function applyCustomStylePatch(html: string) {
+  const patchStartIndex = html.indexOf(PATCH_START);
+  const patchEndIndex = html.indexOf(PATCH_END);
+  if (patchStartIndex >= 0 && patchEndIndex > patchStartIndex) {
+    return html.replace(new RegExp(PATCH_START + '.*' + PATCH_END, 'gis'), customStyle);
+  }
+
+  return html.replace('</head>', customStyle + '</head>');
+}
+
 export async function regressifyProcess(command: 'approve' | 'reference' | 'test' | 'snapshot', args: string[]) {
   const backstopDirName = getBackstopDirName(args);
   patchCompare();
@@ -46,17 +56,11 @@ export async function regressifyProcess(command: 'approve' | 'reference' | 'test
 
 function patchCustomStyle(reportIndex: string) {
   let html = fs.readFileSync(reportIndex, 'utf-8');
-  const patchStartIndex = html.indexOf(PATCH_START);
-  const patchEndIndex = html.indexOf(PATCH_END);
-  if (patchStartIndex > 0 && patchEndIndex > patchStartIndex) {
-    html = html.replace(new RegExp(PATCH_START + '.*' + patchEndIndex, 'gi'), customStyle);
-  } else {
-    html = html.replace('</head>', customStyle + '</head>');
-  }
+  html = applyCustomStylePatch(html);
   fs.writeFileSync(reportIndex, html);
 }
 
-function patchCompare() {
+export function patchCompare() {
   const reportIndex = path.resolve(getLibraryPath(), 'node_modules/backstopjs/compare/output/index.html');
   const reportIndex2 = path.resolve(getLibraryPath(), '../backstopjs/compare/output/index.html');
   if (fs.existsSync(reportIndex)) {

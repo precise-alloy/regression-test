@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    timeout-minutes: 5
+    timeout-minutes: 20
     runs-on: windows-2022
     steps:
       - name: Checkout code
@@ -26,5 +26,14 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Tests
+      - name: Build
+        run: bun run build
+
+      - name: Unit tests with coverage gate
+        run: bun run test:ci
+
+      - name: Install browsers
+        run: bun run install:browsers
+
+      - name: Smoke reference generation
         run: bun run ref -- --test-suite alloy

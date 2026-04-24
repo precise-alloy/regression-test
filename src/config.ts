@@ -3,7 +3,7 @@ import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
 import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
-import { TestSuiteModel, ScenarioModel, PersistAction } from './types.js';
+import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig } from './types.js';
 import chalk from 'chalk';
 import { exit } from 'process';
 import YAML from 'js-yaml';
@@ -11,28 +11,45 @@ import { getTestUrl } from './replacements.js';
 import { getStatePath } from './state.js';
 import { globSync } from 'glob';
 
-type ArgConfig = {
+export type ArgConfig = {
   testSuite: string;
   isRef: boolean;
   globalRequiredLogin: boolean;
 };
 
+export const DEFAULT_VIEWPORTS_PATH = 'common/_viewports.yaml';
+export const DEFAULT_SCENARIO_DELAY = 1000;
+export const DEFAULT_MISMATCH_THRESHOLD = 0.1;
+export const DEFAULT_POST_INTERACTION_WAIT = 1;
+export const DEFAULT_ASYNC_CAPTURE_LIMIT = 5;
+export const DEFAULT_ASYNC_COMPARE_LIMIT = 50;
+
+export class ConfigValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConfigValidationError';
+  }
+}
+
 const libraryPath = getLibraryPath();
 const engine: 'puppeteer' | 'playwright' = 'playwright';
 
-function getArgConfigs(args: string[]): ArgConfig[] {
+export function getRequiredTestSuiteArg(args: string[]): string {
   const testSuite = getStringArg(args, '--test-suite');
+
+  if (!testSuite) {
+    throw new ConfigValidationError('Argument `--test-suite` must be set.');
+  }
+
+  return testSuite;
+}
+
+export function getArgConfigs(args: string[]): ArgConfig[] {
+  const testSuite = getRequiredTestSuiteArg(args);
   const isRef = getFlagArg(args, '--ref');
   const globalRequiredLogin = getFlagArg(args, '--requiredLogin');
   if (globalRequiredLogin) {
     console.log('force run all scenarios in login mode');
-  }
-
-  if (!testSuite) {
-    console.log(chalk.red('Argument `--test-suite` must be set.'));
-    console.log(chalk.red('Sample command: regressify <command> --test-suite <test-suite>'));
-    console.log(chalk.red('Command is either `ref`, `approve` or `test`.'));
-    exit(1);
   }
 
   const visualTestsDir = path.join(process.cwd(), 'visual_tests');
@@ -50,11 +67,31 @@ function getArgConfigs(args: string[]): ArgConfig[] {
     }));
 }
 
-function getScriptPath(scriptPath: string, engine: 'puppeteer' | 'playwright') {
+export function getScriptPath(scriptPath: string, engine: 'puppeteer' | 'playwright') {
   return path.join(libraryPath, '.engine_scripts', (engine == 'puppeteer' ? 'puppet' : 'playwright') + scriptPath);
 }
 
-function getData(testSuite: String): TestSuiteModel | undefined {
+/**
+ * Load workspace-level defaults from `regressify.yaml` (or `.yml`)
+ * at the workspace root. The file is optional; when absent an empty
+ * object is returned so the cascade always falls back cleanly.
+ */
+export function getWorkspaceConfig(): WorkspaceConfig {
+  const extensions = ['yaml', 'yml'];
+
+  for (const ext of extensions) {
+    const wsPath = path.join(process.cwd(), `regressify.${ext}`);
+    if (fs.existsSync(wsPath)) {
+      console.log('Workspace config: ', wsPath);
+      const content = fs.readFileSync(wsPath, 'utf-8');
+      return (YAML.load(content) as WorkspaceConfig) ?? {};
+    }
+  }
+
+  return {};
+}
+
+export function getData(testSuite: string): TestSuiteModel | undefined {
   let extensions: { ext: string; parse: (content: string) => unknown }[] = [
     {
       ext: 'yaml',
@@ -78,8 +115,6 @@ function getData(testSuite: String): TestSuiteModel | undefined {
       const content = fs.readFileSync(dataPath, 'utf-8');
       const testSuite = extensions[i].parse(content) as TestSuiteModel;
 
-      testSuite.useCssOverride = typeof testSuite.useCssOverride === 'boolean' ? testSuite.useCssOverride : true;
-
       return testSuite;
     }
   }
@@ -87,9 +122,24 @@ function getData(testSuite: String): TestSuiteModel | undefined {
   throw `Data file not found for test suite: ${testSuite}`;
 }
 
-function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level: number) {
-  if (level > 100) {
-    throw 'Level is too large';
+function getScenarioIdentifier(model: ScenarioModel, fallback: string): string {
+  return model.id ?? model.label ?? model.url ?? fallback;
+}
+
+function normalizeName(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+export function resolveStrictBoolean(...values: Array<boolean | undefined>): boolean | undefined {
+  return values.find((value) => typeof value === 'boolean');
+}
+
+export function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level: number, trail?: string[]) {
+  const currentIdentifier = getScenarioIdentifier(model, `<anonymous:${level}>`);
+  const currentTrail = trail ?? [currentIdentifier];
+
+  if (level >= 100) {
+    throw new ConfigValidationError(`Scenario dependency depth exceeded 100: ${currentTrail.join(' -> ')}`);
   }
 
   if (!model.needs) {
@@ -104,13 +154,18 @@ function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level
   }
 
   neededActions.reverse().forEach((n) => {
-    const targetScenarios = scenarios.filter((s) => !!s.id && s.id.toLowerCase() == n.toLowerCase());
+    const normalizedNeed = normalizeName(n);
+    if (currentTrail.map(normalizeName).includes(normalizedNeed)) {
+      throw new ConfigValidationError(`Circular scenario dependency detected: ${[...currentTrail, n].join(' -> ')}`);
+    }
+
+    const targetScenarios = scenarios.filter((s) => !!s.id && normalizeName(s.id) == normalizedNeed);
     if (targetScenarios.length !== 1) {
-      throw `The test suite must contains exactly ONE scenario with id: ${n}`;
+      throw new ConfigValidationError(`The test suite must contain exactly one scenario with id: ${n}`);
     }
 
     var targetScenario = targetScenarios[0];
-    expandScenarios(targetScenario, scenarios, level + 1);
+    expandScenarios(targetScenario, scenarios, level + 1, [...currentTrail, getScenarioIdentifier(targetScenario, n)]);
     if (!!targetScenario.actions) {
       if (!model.actions) {
         model.actions = [];
@@ -122,48 +177,104 @@ function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level
   model.needs = undefined;
 }
 
-function getScenarios(args: string[], testSuite: string, isRef: boolean, globalRequiredLogin: boolean) {
+/**
+ * Resolve `viewportNames` across scenario → suite → workspace, then
+ * filter the loaded viewport definitions accordingly.
+ */
+export function resolveViewports(
+  s: ScenarioModel,
+  data: TestSuiteModel,
+  ws: WorkspaceConfig,
+  viewports?: ViewportNext[]
+): ViewportNext[] | undefined {
+  const names = s.viewportNames ?? data.viewportNames ?? ws.viewportNames;
+
+  if (!names || !viewports?.length) {
+    return undefined;
+  }
+
+  const targets = (typeof names === 'string' ? [names] : names).map((name) => normalizeName(name));
+
+  return viewports.filter((v) => targets.includes(normalizeName(v.label)));
+}
+
+type ResolveScenarioOptionsInput = {
+  args: string[];
+  scenario: ScenarioModel;
+  suite: TestSuiteModel;
+  workspace: WorkspaceConfig;
+  testSuite: string;
+  isRef: boolean;
+  globalRequiredLogin: boolean;
+  index: number;
+  total: number;
+  viewports?: ViewportNext[];
+};
+
+export function resolveScenarioOptions({
+  args,
+  scenario,
+  suite,
+  workspace,
+  testSuite,
+  isRef,
+  globalRequiredLogin,
+  index,
+  total,
+  viewports,
+}: ResolveScenarioOptionsInput): ScenarioModel {
+  const requiredLogin = globalRequiredLogin ? true : (resolveStrictBoolean(scenario.requiredLogin, workspace.requiredLogin) ?? false);
+
+  return {
+    ...scenario,
+    testSuite,
+    requiredLogin,
+    getTestUrl: (url: string) => getTestUrl(args, url, isRef),
+    url: isRef ? scenario.url : getTestUrl(args, scenario.url, isRef),
+    index: String(index + 1).padStart(String(total).length, ' '),
+    total,
+    delay: scenario.delay ?? workspace.delay ?? DEFAULT_SCENARIO_DELAY,
+    state: suite.state ?? workspace.state,
+    hideSelectors: scenario.hideSelectors ?? suite.hideSelectors ?? workspace.hideSelectors,
+    removeSelectors: scenario.removeSelectors ?? suite.removeSelectors ?? workspace.removeSelectors,
+    useCssOverride: resolveStrictBoolean(scenario.useCssOverride, suite.useCssOverride, workspace.useCssOverride) ?? true,
+    cssOverridePath: scenario.cssOverridePath ?? suite.cssOverridePath ?? workspace.cssOverridePath,
+    bypassCsp: resolveStrictBoolean(scenario.bypassCsp, suite.bypassCsp, workspace.bypassCsp),
+    jsOnReadyPath: scenario.jsOnReadyPath ?? workspace.jsOnReadyPath,
+    cookiePath: scenario.cookiePath ?? workspace.cookiePath,
+    noScrollTop: scenario.noScrollTop ?? workspace.noScrollTop,
+    viewports: resolveViewports(scenario, suite, workspace, viewports),
+    referenceUrl: !isRef ? scenario.url : undefined,
+    misMatchThreshold: scenario.misMatchThreshold ?? suite.misMatchThreshold ?? workspace.misMatchThreshold ?? DEFAULT_MISMATCH_THRESHOLD,
+    postInteractionWait: scenario.postInteractionWait ?? suite.postInteractionWait ?? workspace.postInteractionWait ?? DEFAULT_POST_INTERACTION_WAIT,
+  };
+}
+
+export function getScenarios(args: string[], testSuite: string, isRef: boolean, globalRequiredLogin: boolean, ws: WorkspaceConfig) {
   const scenarios: Scenario[] = [];
 
   const data = getData(testSuite);
 
-  const viewports = parseDataFromFile(data?.viewportsPath ?? 'common/_viewports.yaml') as ViewportNext[];
+  const viewportsPath = data?.viewportsPath ?? ws.viewportsPath ?? DEFAULT_VIEWPORTS_PATH;
+  const viewports = parseDataFromFile(viewportsPath) as ViewportNext[];
   if (data) {
     [].forEach.call(data.scenarios, (s: ScenarioModel) => {
       expandScenarios(s, data.scenarios, 0);
     });
 
-    const getTestUrlLocal = (url: string) => getTestUrl(args, url, isRef);
-
-    const pad = String(data?.scenarios.length).length;
     data.scenarios.forEach((s, index) => {
-      const opts: ScenarioModel = {
-        ...s,
+      const opts = resolveScenarioOptions({
+        args,
+        scenario: s,
+        suite: data,
+        workspace: ws,
         testSuite,
-        requiredLogin: globalRequiredLogin || s.requiredLogin,
-        getTestUrl: getTestUrlLocal,
-        url: isRef ? s.url : getTestUrl(args, s.url, isRef),
-        index: String(index + 1).padStart(pad, ' '),
+        isRef,
+        globalRequiredLogin,
+        index,
         total: data.scenarios.length,
-        delay: s.delay ?? 1000,
-        state: data.state,
-        hideSelectors: s.hideSelectors ?? data.hideSelectors,
-        removeSelectors: s.removeSelectors ?? data.removeSelectors,
-        useCssOverride: typeof s.useCssOverride === 'boolean' ? s.useCssOverride : data.useCssOverride,
-        jsOnReadyPath: s.jsOnReadyPath,
-        viewports: !!s.viewportNames
-          ? typeof s.viewportNames === 'string'
-            ? viewports.filter((v) => v.label.toLowerCase() == (s.viewportNames as string).trim().toLowerCase())
-            : viewports.filter((v) => s.viewportNames?.includes(v.label))
-          : !!data.viewportNames
-            ? typeof data.viewportNames === 'string'
-              ? viewports.filter((v) => v.label.toLowerCase() == (data.viewportNames as string).trim().toLowerCase())
-              : viewports.filter((v) => data.viewportNames?.includes(v.label))
-            : undefined,
-        referenceUrl: !isRef ? s.url : undefined,
-        misMatchThreshold: s.misMatchThreshold ?? data.misMatchThreshold ?? 0.1,
-        postInteractionWait: s.postInteractionWait ?? data.postInteractionWait ?? 1,
-      };
+        viewports,
+      });
 
       if (opts.restore && Array.isArray(opts.restore)) {
         // Deduplicate restore array
@@ -186,25 +297,52 @@ function getScenarios(args: string[], testSuite: string, isRef: boolean, globalR
   return { scenarios, data, viewports };
 }
 
-export function getConfigs(args: string[], backstopDirName: string): Config[] {
-  // Check if running on CI environment, such as GitHub Actions or Azure Pipelines
-  // If so, turn of headless debug window
+export function isCIEnvironment(env = process.env): boolean {
   const isAzurePipelines =
-    process.env.TF_BUILD === 'True' &&
-    !!process.env.SYSTEM_TEAMFOUNDATIONSERVERURI &&
-    !!process.env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI &&
-    !!process.env.SYSTEM_TEAMPROJECT &&
-    !!process.env.SYSTEM_COLLECTIONURI;
+    env.TF_BUILD === 'True' &&
+    !!env.SYSTEM_TEAMFOUNDATIONSERVERURI &&
+    !!env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI &&
+    !!env.SYSTEM_TEAMPROJECT &&
+    !!env.SYSTEM_COLLECTIONURI;
 
-  const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+  const isGitHubActions = env.GITHUB_ACTIONS === 'true';
 
-  const isCI = process.env.CI === 'true' || isAzurePipelines || isGitHubActions;
+  return env.CI === 'true' || isAzurePipelines || isGitHubActions;
+}
 
-  return getArgConfigs(args).map((argConfig) => {
+function logConfigValidationAndExit(error: ConfigValidationError): never {
+  console.log(chalk.red(error.message));
+  console.log(chalk.red('Sample command: regressify <command> --test-suite <test-suite>'));
+  console.log(chalk.red('Command is either `ref`, `approve` or `test`.'));
+  exit(1);
+}
+
+export function getConfigs(args: string[], backstopDirName: string): Config[] {
+  const isCI = isCIEnvironment();
+
+  const ws = getWorkspaceConfig();
+  let argConfigs: ArgConfig[];
+
+  try {
+    argConfigs = getArgConfigs(args);
+  } catch (error) {
+    if (error instanceof ConfigValidationError) {
+      return logConfigValidationAndExit(error);
+    }
+
+    throw error;
+  }
+
+  return argConfigs.map((argConfig) => {
     const { testSuite, isRef, globalRequiredLogin } = argConfig;
-    const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin);
+    const { scenarios, data, viewports } = getScenarios(args, testSuite, isRef, globalRequiredLogin, ws);
 
     const backStopTestSuiteFolder = backstopDirName + '/' + testSuite;
+
+    const debug = data?.debug ?? ws.debug;
+    const state = data?.state ?? ws.state;
+    const ignoreSslErrors =
+      typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : typeof ws.ignoreSslErrors === 'boolean' ? ws.ignoreSslErrors : true;
 
     const config = {
       id: testSuite,
@@ -231,15 +369,15 @@ export function getConfigs(args: string[], backstopDirName: string): Config[] {
           '--no-sandbox',
           '--window-position=0,0',
         ],
-        browser: data?.browser ?? 'chromium',
-        ignoreHTTPSErrors: data && typeof data?.ignoreSslErrors === 'boolean' ? data.ignoreSslErrors : true,
-        headless: data?.debug && !isCI ? undefined : 'new',
-        storageState: data?.state && fs.existsSync(getStatePath(data.state)) ? getStatePath(data.state) : undefined,
+        browser: data?.browser ?? ws.browser ?? 'chromium',
+        ignoreHTTPSErrors: ignoreSslErrors,
+        headless: debug && !isCI ? undefined : 'new',
+        storageState: state && fs.existsSync(getStatePath(state)) ? getStatePath(state) : undefined,
       },
-      asyncCaptureLimit: data?.asyncCaptureLimit ?? 5,
-      asyncCompareLimit: data?.asyncCompareLimit ?? 50,
+      asyncCaptureLimit: data?.asyncCaptureLimit ?? ws.asyncCaptureLimit ?? DEFAULT_ASYNC_CAPTURE_LIMIT,
+      asyncCompareLimit: data?.asyncCompareLimit ?? ws.asyncCompareLimit ?? DEFAULT_ASYNC_COMPARE_LIMIT,
       debug: false,
-      debugWindow: data?.debug && !isCI,
+      debugWindow: debug && !isCI,
     } as Config;
 
     return config;

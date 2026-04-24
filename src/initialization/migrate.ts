@@ -3,6 +3,19 @@ import path, { basename } from 'path';
 import chalk from 'chalk';
 import slash from 'slash';
 
+export const COMMON_MIGRATION_FILES = [
+  '_cookies.yaml',
+  '_on-ready.js',
+  '_override.css',
+  '_replacement-profiles.yaml',
+  '_signing-in.yaml',
+  '_viewports.yaml',
+];
+
+export function getMigrationDestination(fileName: string, commonFolder: string, visualTestsFolder: string) {
+  return slash(path.join(COMMON_MIGRATION_FILES.includes(fileName) ? commonFolder : visualTestsFolder, fileName));
+}
+
 export async function migrate() {
   try {
     const oldDataFolder = slash(path.join(process.cwd(), 'data'));
@@ -17,14 +30,14 @@ export async function migrate() {
         const fileName = basename(file);
         const source = slash(path.join(oldDataFolder, fileName));
 
-        if (
-          ['_cookies.yaml', '_on-ready.js', '_override.css', '_replacement-profiles.yaml', '_signing-in.yaml', '_viewports.yaml'].includes(fileName)
-        ) {
-          const destination = slash(path.join(commonFolder, fileName));
+        if (COMMON_MIGRATION_FILES.includes(fileName)) {
+          const destination = getMigrationDestination(fileName, commonFolder, visualTestsFolder);
+          fs.mkdirSync(path.dirname(destination), { recursive: true });
 
           fs.copyFileSync(source, destination);
         } else {
-          const destination = slash(path.join(visualTestsFolder, fileName));
+          const destination = getMigrationDestination(fileName, commonFolder, visualTestsFolder);
+          fs.mkdirSync(path.dirname(destination), { recursive: true });
 
           fs.copyFileSync(source, destination);
         }

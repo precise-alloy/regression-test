@@ -1,6 +1,6 @@
 {
   "name": "regressify",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Visual regression tests support",
   "main": "src/index.ts",
   "type": "module",
@@ -13,6 +13,10 @@
     "ref": "tsx src/index.ts ref",
     "approve": "tsx src/index.ts approve",
     "test": "tsx src/index.ts test",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --coverage --reporter=dot",
     "snapshot": "tsx src/index.ts snapshot",
     "ver": "bun version"
   },
@@ -42,8 +46,10 @@
     "@types/js-yaml": "^4.0.9",
     "@types/ncp": "^2.0.8",
     "@types/node": "^22.15.17",
+    "@vitest/coverage-v8": "^3.2.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }

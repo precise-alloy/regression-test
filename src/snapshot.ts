@@ -55,7 +55,7 @@ export function summarizeReport(report: BackstopReport): HtmlReportSummary {
 
   return {
     id: report.id,
-    totalTests: report.tests.length,
+    totalTests: report?.tests?.length ?? 0,
     totalPassed,
     totalFailed,
   };
@@ -72,6 +72,10 @@ export function processTestSuite(backstopDir: string, config: Config, hashes: Re
   const bitmapTestDir = path.join(testDir, 'bitmaps_test');
 
   if (!fs.existsSync(htmlReportDir)) {
+    return null;
+  }
+
+  if (!fs.existsSync(bitmapTestDir)) {
     return null;
   }
 

@@ -161,7 +161,7 @@ export function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[]
 
     const targetScenarios = scenarios.filter((s) => !!s.id && normalizeName(s.id) == normalizedNeed);
     if (targetScenarios.length !== 1) {
-      throw new ConfigValidationError(`The test suite must contains exactly ONE scenario with id: ${n}`);
+      throw new ConfigValidationError(`The test suite must contain exactly one scenario with id: ${n}`);
     }
 
     var targetScenario = targetScenarios[0];

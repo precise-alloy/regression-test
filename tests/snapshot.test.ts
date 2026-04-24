@@ -11,10 +11,20 @@ import {
   snapshot,
   summarizeReport,
 } from '../src/snapshot.ts';
-import { createTempWorkspace, useWorkspace, writeWorkspaceFile } from './test-utils.ts';
+import { cleanupTempWorkspace, createTempWorkspace, useWorkspace, writeWorkspaceFile } from './test-utils.ts';
+
+let tempWorkspaces: string[] = [];
+
+function workspace(files: Record<string, string | Uint8Array> = {}) {
+  const ws = createTempWorkspace(files);
+  tempWorkspaces.push(ws);
+  return ws;
+}
 
 afterEach(() => {
   vi.restoreAllMocks();
+  tempWorkspaces.forEach(cleanupTempWorkspace);
+  tempWorkspaces = [];
 });
 
 describe('snapshot.ts', () => {
@@ -50,44 +60,55 @@ describe('snapshot.ts', () => {
   });
 
   it('hashes file content deterministically and returns null for missing suite structures', () => {
-    const workspace = createTempWorkspace({
+    const ws = workspace({
       'file.txt': 'same-content',
     });
-    const filePath = path.join(workspace, 'file.txt');
+    const filePath = path.join(ws, 'file.txt');
 
     expect(calculateFileHash(filePath)).toBe(calculateTextHash('same-content'));
-    expect(processTestSuite(workspace, { id: 'missing' } as never, {})).toBeNull();
+    expect(processTestSuite(ws, { id: 'missing' } as never, {})).toBeNull();
 
-    writeWorkspaceFile(workspace, 'present/run-1/bitmaps_test/ref.txt', 'ref');
-    expect(processTestSuite(path.join(workspace, 'present'), { id: 'run-1' } as never, {})).toBeNull();
+    writeWorkspaceFile(ws, 'present/run-1/bitmaps_test/ref.txt', 'ref');
+    expect(processTestSuite(path.join(ws, 'present'), { id: 'run-1' } as never, {})).toBeNull();
 
-    writeWorkspaceFile(workspace, 'with-html/run-2/html_report/index.html', '<html></html>');
-    writeWorkspaceFile(workspace, 'with-html/run-2/bitmaps_test/ref.txt', 'ref');
-    expect(processTestSuite(path.join(workspace, 'with-html'), { id: 'run-2' } as never, {})).toBeNull();
+    writeWorkspaceFile(ws, 'with-html/run-2/html_report/index.html', '<html></html>');
+    writeWorkspaceFile(ws, 'with-html/run-2/bitmaps_test/ref.txt', 'ref');
+    expect(processTestSuite(path.join(ws, 'with-html'), { id: 'run-2' } as never, {})).toBeNull();
+  });
+
+  it('returns null when html_report exists but bitmaps_test directory is missing', () => {
+    const ws = workspace();
+    writeWorkspaceFile(ws, 'suite/html_report/config.js', "'bitmaps_test/run-1/ref.png'");
+    expect(processTestSuite(ws, { id: 'suite' } as never, {})).toBeNull();
+  });
+
+  it('summarizes reports with missing tests array without throwing', () => {
+    const summary = summarizeReport({ id: 'alloy', testSuite: 'alloy' } as never);
+    expect(summary).toEqual({ id: 'alloy', totalTests: 0, totalPassed: 0, totalFailed: 0 });
   });
 
   it('processes a test suite report, removes unreferenced bitmap directories, and rewrites report assets', () => {
-    const workspace = createTempWorkspace();
-    const backstopDir = path.join(workspace, '.backstop');
+    const ws = workspace();
+    const backstopDir = path.join(ws, '.backstop');
     const suiteDir = path.join(backstopDir, 'alloy');
     const referencedDir = path.join(suiteDir, 'bitmaps_test', 'run-1');
     const unreferencedDir = path.join(suiteDir, 'bitmaps_test', 'run-old');
 
     writeWorkspaceFile(
-      workspace,
+      ws,
       '.backstop/alloy/html_report/config.js',
       ["'bitmaps_test/run-1/ref.png'", '"bitmaps_test/run-1/test.png"', "'bitmaps_test/run-1/diff.png'"].join('\n')
     );
     writeWorkspaceFile(
-      workspace,
+      ws,
       '.backstop/alloy/html_report/index.html',
       '<html><head></head><body><script src="config.js"></script></body></html>'
     );
-    writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-1/ref.png', 'reference');
-    writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-1/test.png', 'test');
-    writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-1/diff.png', 'diff');
+    writeWorkspaceFile(ws, '.backstop/alloy/bitmaps_test/run-1/ref.png', 'reference');
+    writeWorkspaceFile(ws, '.backstop/alloy/bitmaps_test/run-1/test.png', 'test');
+    writeWorkspaceFile(ws, '.backstop/alloy/bitmaps_test/run-1/diff.png', 'diff');
     writeWorkspaceFile(
-      workspace,
+      ws,
       '.backstop/alloy/bitmaps_test/run-1/report.json',
       JSON.stringify({
         id: 'alloy',
@@ -104,7 +125,7 @@ describe('snapshot.ts', () => {
         ],
       })
     );
-    writeWorkspaceFile(workspace, '.backstop/alloy/bitmaps_test/run-old/unused.txt', 'old');
+    writeWorkspaceFile(ws, '.backstop/alloy/bitmaps_test/run-old/unused.txt', 'old');
 
     const summary = processTestSuite(backstopDir, { id: 'alloy' } as never, {});
 
@@ -119,41 +140,41 @@ describe('snapshot.ts', () => {
   });
 
   it('returns early when the backstop directory does not exist and sorts suite summaries in the final index', () => {
-    const workspace = createTempWorkspace();
-    useWorkspace(workspace);
+    const ws = workspace();
+    useWorkspace(ws);
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     snapshot({ configs: [], backstopDirName: '.missing' });
     expect(consoleSpy).toHaveBeenCalled();
 
-    writeWorkspaceFile(workspace, '.reports/b-suite/html_report/config.js', "'bitmaps_test/run-b/ref.png'");
+    writeWorkspaceFile(ws, '.reports/b-suite/html_report/config.js', "'bitmaps_test/run-b/ref.png'");
     writeWorkspaceFile(
-      workspace,
+      ws,
       '.reports/b-suite/html_report/index.html',
       '<html><head></head><body><script src="config.js"></script></body></html>'
     );
-    writeWorkspaceFile(workspace, '.reports/b-suite/bitmaps_test/run-b/ref.png', 'b-ref');
+    writeWorkspaceFile(ws, '.reports/b-suite/bitmaps_test/run-b/ref.png', 'b-ref');
     writeWorkspaceFile(
-      workspace,
+      ws,
       '.reports/b-suite/bitmaps_test/run-b/report.json',
       JSON.stringify({ id: 'b-suite', testSuite: 'b-suite', tests: [{ status: 'pass', pair: { reference: 'run-b/ref.png' } }] })
     );
-    writeWorkspaceFile(workspace, '.reports/a-suite/html_report/config.js', "'bitmaps_test/run-a/ref.png'");
+    writeWorkspaceFile(ws, '.reports/a-suite/html_report/config.js', "'bitmaps_test/run-a/ref.png'");
     writeWorkspaceFile(
-      workspace,
+      ws,
       '.reports/a-suite/html_report/index.html',
       '<html><head></head><body><script src="config.js"></script></body></html>'
     );
-    writeWorkspaceFile(workspace, '.reports/a-suite/bitmaps_test/run-a/ref.png', 'a-ref');
+    writeWorkspaceFile(ws, '.reports/a-suite/bitmaps_test/run-a/ref.png', 'a-ref');
     writeWorkspaceFile(
-      workspace,
+      ws,
       '.reports/a-suite/bitmaps_test/run-a/report.json',
       JSON.stringify({ id: 'a-suite', testSuite: 'a-suite', tests: [{ status: 'pass', pair: { reference: 'run-a/ref.png' } }] })
     );
 
     snapshot({ configs: [{ id: 'b-suite' }, { id: 'a-suite' }] as never, backstopDirName: '.reports' });
 
-    const html = fs.readFileSync(path.join(workspace, '.reports', 'index.html'), 'utf-8');
+    const html = fs.readFileSync(path.join(ws, '.reports', 'index.html'), 'utf-8');
     expect(html.indexOf('a-suite')).toBeLessThan(html.indexOf('b-suite'));
   });
 });

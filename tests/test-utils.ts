@@ -15,6 +15,10 @@ export function createTempWorkspace(files: Record<string, string | Uint8Array> =
   return workspace;
 }
 
+export function cleanupTempWorkspace(workspace: string) {
+  fs.rmSync(workspace, { recursive: true, force: true });
+}
+
 export function writeWorkspaceFile(workspace: string, relativePath: string, content: string | Uint8Array) {
   const fullPath = path.join(workspace, relativePath);
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });

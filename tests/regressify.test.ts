@@ -1,11 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createTempWorkspace, writeWorkspaceFile } from './test-utils.ts';
+import { cleanupTempWorkspace, createTempWorkspace, writeWorkspaceFile } from './test-utils.ts';
+
+let workspace: string;
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.resetModules();
+  if (workspace) {
+    cleanupTempWorkspace(workspace);
+  }
 });
 
 describe('regressify.ts', () => {
@@ -14,7 +19,7 @@ describe('regressify.ts', () => {
   });
 
   it('patches the backstop compare html with the custom style block', async () => {
-    const workspace = createTempWorkspace();
+    workspace = createTempWorkspace();
     const reportIndex = path.join(workspace, 'node_modules', 'backstopjs', 'compare', 'output', 'index.html');
     writeWorkspaceFile(workspace, 'node_modules/backstopjs/compare/output/index.html', '<html><head></head><body></body></html>');
 
@@ -42,7 +47,7 @@ describe('regressify.ts', () => {
   });
 
   it('runs backstop for non-snapshot commands and continues after a failure', async () => {
-    const workspace = createTempWorkspace();
+    workspace = createTempWorkspace();
     writeWorkspaceFile(workspace, 'node_modules/backstopjs/compare/output/index.html', '<html><head></head><body></body></html>');
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -65,7 +70,7 @@ describe('regressify.ts', () => {
   });
 
   it('replaces an existing patch block and logs when no compare report file exists', async () => {
-    const workspace = createTempWorkspace();
+    workspace = createTempWorkspace();
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     vi.doMock('backstopjs', () => ({ default: vi.fn(() => Promise.resolve()) }));
@@ -84,5 +89,24 @@ describe('regressify.ts', () => {
 
     patchCompare();
     expect(consoleSpy).toHaveBeenCalled();
+  });
+
+  it('replaces an existing patch block when it starts at index 0 of the string', async () => {
+    workspace = createTempWorkspace();
+
+    vi.doMock('backstopjs', () => ({ default: vi.fn(() => Promise.resolve()) }));
+    vi.doMock('../src/config.js', () => ({ getConfigs: vi.fn(() => []) }));
+    vi.doMock('../src/snapshot.js', () => ({ snapshot: vi.fn() }));
+    vi.doMock('../src/helpers.js', () => ({
+      getBackstopDirName: () => '.backstop',
+      getLibraryPath: () => workspace,
+    }));
+
+    const { applyCustomStylePatch } = await import('../src/regressify.ts');
+
+    const input = '<!-- PATCH START --><style>old</style><!-- PATCH END -->';
+    const patched = applyCustomStylePatch(input);
+    expect(patched).toContain('PATCH START');
+    expect(patched).not.toContain('<style>old</style>');
   });
 });

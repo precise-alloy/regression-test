@@ -23,7 +23,7 @@ ${PATCH_END}
 export function applyCustomStylePatch(html: string) {
   const patchStartIndex = html.indexOf(PATCH_START);
   const patchEndIndex = html.indexOf(PATCH_END);
-  if (patchStartIndex > 0 && patchEndIndex > patchStartIndex) {
+  if (patchStartIndex >= 0 && patchEndIndex > patchStartIndex) {
     return html.replace(new RegExp(PATCH_START + '.*' + PATCH_END, 'gis'), customStyle);
   }
 

@@ -63,12 +63,12 @@ describe('config scenario dependency expansion', () => {
 
   it('throws when a dependency id is missing or duplicated', () => {
     const target = { id: 'child', url: 'https://example.com/c', description: 'child', needs: 'missing' } as never;
-    expect(() => expandScenarios(target, [target], 0)).toThrow(/exactly ONE scenario with id: missing/);
+    expect(() => expandScenarios(target, [target], 0)).toThrow(/exactly one scenario with id: missing/);
 
     const duplicateA = { id: 'dup', url: 'https://example.com/a', description: 'dup' } as never;
     const duplicateB = { id: 'dup', url: 'https://example.com/b', description: 'dup' } as never;
     const duplicated = { id: 'child', url: 'https://example.com/c', description: 'child', needs: 'dup' } as never;
-    expect(() => expandScenarios(duplicated, [duplicateA, duplicateB, duplicated], 0)).toThrow(/exactly ONE scenario with id: dup/);
+    expect(() => expandScenarios(duplicated, [duplicateA, duplicateB, duplicated], 0)).toThrow(/exactly one scenario with id: dup/);
   });
 
   it('throws early with a readable cycle path when scenarios depend on each other', () => {

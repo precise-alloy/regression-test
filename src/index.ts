@@ -5,9 +5,14 @@ import { initRegressify } from './initialization/init.js';
 import { regressifyProcess } from './regressify.js';
 import { exit } from 'process';
 import { getVersion } from './initialization/get-version.js';
+import { installBrowsers } from './install.js';
 
 function logErrorAndExit() {
-  console.log(chalk.red("Invalid command. Use one of the following: 'regressify init' 'regressify ref', 'regressify approve', 'regressify test'."));
+  console.log(
+    chalk.red(
+      "Invalid command. Use one of the following: 'regressify init', 'regressify install', 'regressify ref', 'regressify approve', 'regressify test', 'regressify snapshot', 'regressify version'.",
+    ),
+  );
   exit(1);
 }
 
@@ -22,6 +27,8 @@ if (command === 'version') {
   getVersion();
 } else if (command === 'init') {
   await initRegressify();
+} else if (command === 'install') {
+  installBrowsers();
 } else if (command === 'ref') {
   await regressifyProcess('test', ['--ref', ...args.slice(1)]);
 } else if (command === 'approve') {

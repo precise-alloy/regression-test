@@ -10,6 +10,12 @@ Please check [Documentation](https://tuyen.blog/optimizely-cms/testing/get-start
    npm i -g regressify
    ```
 
+1. Install the browser binaries and note the BrowserStack-aligned versions used by this release:
+
+   ```bash
+   regressify install
+   ```
+
 1. Manual Set up all test and config files in the **visual_tests** folder and place it at the root of the project, or automatically add it using the command:
 
    ```bash
@@ -23,4 +29,3 @@ Please check [Documentation](https://tuyen.blog/optimizely-cms/testing/get-start
     "approve": "regressify approve",
     "test": "regressify test"
    ```
-

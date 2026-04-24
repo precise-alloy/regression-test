@@ -5,8 +5,8 @@ import YAML from 'js-yaml';
 import { getStringArg } from './helpers.js';
 import slash from 'slash';
 
-function getReplacementProfileName(args: string[]): string {
-  const profileArg = getStringArg(args, 'replacement-profile');
+export function getReplacementProfileName(args: string[]): string {
+  const profileArg = getStringArg(args, '--replacement-profile') ?? getStringArg(args, 'replacement-profile');
   if (profileArg) {
     return profileArg;
   }
@@ -19,7 +19,7 @@ function getReplacementProfileName(args: string[]): string {
   return 'default';
 }
 
-function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {
+export function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {
   const replacementProfileName = getReplacementProfileName(args);
 
   const replacementProfilePath = slash(path.join(process.cwd(), 'common', '_replacement-profiles.yaml'));
@@ -31,18 +31,25 @@ function getReplacementProfile(args: string[]): ReplacementModel[] | undefined {
   return profiles.profiles[replacementProfileName];
 }
 
-export const getTestUrl = (args: string[], url: string, isRef: boolean) => {
-  const replacementProfile = getReplacementProfile(args);
-
-  if (isRef || !replacementProfile) {
+export function applyReplacements(url: string, replacements?: ReplacementModel[]): string {
+  if (!replacements?.length) {
     return url;
   }
 
   let testUrl = url;
-  replacementProfile.forEach((e) => {
-    // console.log('Replacing: ', e.ref, ' with ', e.test, ' regex: ', e.regex);
-    return (testUrl = e.regex ? testUrl.replace(new RegExp(e.ref, e.flags), e.test) : testUrl.replace(e.ref, e.test));
-  });
+  for (const replacement of replacements) {
+    testUrl = replacement.regex
+      ? testUrl.replace(new RegExp(replacement.ref, replacement.flags), replacement.test)
+      : testUrl.replace(replacement.ref, replacement.test);
+  }
 
   return testUrl;
+}
+
+export const getTestUrl = (args: string[], url: string, isRef: boolean) => {
+  if (isRef) {
+    return url;
+  }
+
+  return applyReplacements(url, getReplacementProfile(args));
 };

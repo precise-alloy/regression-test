@@ -7,26 +7,33 @@ import slash from 'slash';
 
 const { ncp } = pkg;
 
+export const REQUIRED_COMMON_FILES = ['test-schema.json', 'replacement-profiles-schema.json', 'regressify-schema.json'];
+
+export function copyFolder(source: string, destination: string) {
+  return new Promise<void>((resolve, reject) => {
+    ncp(source, destination, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 export async function initCommonFolder() {
   try {
     const sourceFolder = slash(path.join(getLibraryPath(), 'common'));
     const destinationFolder = path.join(process.cwd(), 'common');
 
     if (!fs.existsSync(destinationFolder)) {
-      ncp(sourceFolder, destinationFolder, function (err) {
-        if (err) {
-          console.log(chalk.red('Error copying folder:'), err);
-        } else {
-          console.log(chalk.green('Folder "common" has been copied to your project!'));
-        }
-      });
+      await copyFolder(sourceFolder, destinationFolder);
+      console.log(chalk.green('Folder "common" has been copied to your project!'));
     } else {
       console.log(chalk.yellow('Folder "common" already exists.'));
     }
 
-    const requiredFiles = ['test-schema.json', 'replacement-profiles-schema.json'];
-
-    for (const file of requiredFiles) {
+    for (const file of REQUIRED_COMMON_FILES) {
       const source = slash(path.join(sourceFolder, file));
       const destination = slash(path.join(destinationFolder, file));
 
@@ -50,13 +57,8 @@ export async function initVisualTestsFolder() {
     const destinationFolder = path.join(process.cwd(), 'visual_tests');
 
     if (!fs.existsSync(destinationFolder)) {
-      ncp(sourceFolder, destinationFolder, function (err) {
-        if (err) {
-          console.log(chalk.red('Error copying folder:'), err);
-        } else {
-          console.log(chalk.green('Folder "visual_tests" has been copied to your project!'));
-        }
-      });
+      await copyFolder(sourceFolder, destinationFolder);
+      console.log(chalk.green('Folder "visual_tests" has been copied to your project!'));
     } else {
       console.log(chalk.yellow('Folder "visual_tests" already exists.'));
     }

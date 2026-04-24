@@ -6,8 +6,29 @@ type Extensions = {
   recommendations?: string[];
 };
 
+export type { Extensions };
+
 export async function addExtensions() {
   patchRecommendations();
+}
+
+export function mergeRecommendedExtensions(extensions: Extensions): Extensions {
+  const nextExtensions = JSON.parse(JSON.stringify(extensions || {})) as Extensions;
+
+  nextExtensions.recommendations = nextExtensions.recommendations || [];
+  nextExtensions.recommendations = [
+    ...nextExtensions.recommendations,
+    'tuyen.regressify',
+    'dbaeumer.vscode-eslint',
+    'eamodio.gitlens',
+    'christian-kohler.path-intellisense',
+    'esbenp.prettier-vscode',
+    'redhat.vscode-yaml',
+  ];
+
+  nextExtensions.recommendations = [...new Set(nextExtensions.recommendations)];
+
+  return nextExtensions;
 }
 
 function patchRecommendations() {
@@ -15,21 +36,7 @@ function patchRecommendations() {
     const vsCodeFolder = path.join(process.cwd(), '.vscode');
     const extensionsJsonPath = path.join(vsCodeFolder, 'extensions.json');
     const json = fs.existsSync(extensionsJsonPath) ? fs.readFileSync(extensionsJsonPath, 'utf8') : '{}';
-    const extensions = JSON.parse(json) as Extensions;
-
-    extensions.recommendations = extensions.recommendations || [];
-    extensions.recommendations = [
-      ...extensions.recommendations,
-      'tuyen.regressify',
-      'dbaeumer.vscode-eslint',
-      'eamodio.gitlens',
-      'christian-kohler.path-intellisense',
-      'esbenp.prettier-vscode',
-      'redhat.vscode-yaml',
-    ];
-
-    // Remove duplicates
-    extensions.recommendations = [...new Set(extensions.recommendations)];
+    const extensions = mergeRecommendedExtensions(JSON.parse(json) as Extensions);
 
     if (!fs.existsSync(vsCodeFolder)) {
       fs.mkdirSync(vsCodeFolder, { recursive: true });

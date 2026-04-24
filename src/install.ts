@@ -23,7 +23,11 @@ type BrowserInstallTarget = {
   browserVersion: string;
 };
 
-function getDependencyResolver() {
+export type DependencyResolver = {
+  resolve: (id: string) => string;
+};
+
+export function getDependencyResolver(): DependencyResolver {
   const currentModuleRequire = createRequire(import.meta.url);
 
   try {
@@ -36,11 +40,13 @@ function getDependencyResolver() {
   }
 }
 
-function getBrowserInstallTargets(): BrowserInstallTarget[] {
-  const dependencyResolver = getDependencyResolver();
+export function getBrowserInstallTargets(
+  dependencyResolver: DependencyResolver = getDependencyResolver(),
+  readFileSync: typeof fs.readFileSync = fs.readFileSync,
+): BrowserInstallTarget[] {
   const playwrightCorePackageJsonPath = dependencyResolver.resolve('playwright-core/package.json');
   const browsersJsonPath = path.join(path.dirname(playwrightCorePackageJsonPath), 'browsers.json');
-  const browsers = JSON.parse(fs.readFileSync(browsersJsonPath, 'utf-8')) as PlaywrightBrowsersFile;
+  const browsers = JSON.parse(readFileSync(browsersJsonPath, 'utf-8')) as PlaywrightBrowsersFile;
 
   return supportedBrowsers.map((browserName) => {
     const browser = browsers.browsers.find((candidate) => candidate.name === browserName);
@@ -56,22 +62,40 @@ function getBrowserInstallTargets(): BrowserInstallTarget[] {
   });
 }
 
-export function installBrowsers() {
+type InstallBrowserDependencies = {
+  dependencyResolver?: DependencyResolver;
+  readFileSync?: typeof fs.readFileSync;
+  spawn?: typeof spawnSync;
+  exitFn?: typeof exit;
+  env?: NodeJS.ProcessEnv;
+  execPath?: string;
+  log?: typeof console.log;
+};
+
+export function installBrowsers({
+  dependencyResolver,
+  readFileSync = fs.readFileSync,
+  spawn = spawnSync,
+  exitFn = exit,
+  env = process.env,
+  execPath = process.execPath,
+  log = console.log,
+}: InstallBrowserDependencies = {}) {
   try {
-    const dependencyResolver = getDependencyResolver();
-    const playwrightPackageJsonPath = dependencyResolver.resolve('playwright/package.json');
+    const resolver = dependencyResolver ?? getDependencyResolver();
+    const playwrightPackageJsonPath = resolver.resolve('playwright/package.json');
     const playwrightCliPath = path.join(path.dirname(playwrightPackageJsonPath), 'cli.js');
-    const browserInstallTargets = getBrowserInstallTargets();
+    const browserInstallTargets = getBrowserInstallTargets(resolver, readFileSync);
 
-    console.log(chalk.blue('Installing browser binaries used by this regressify release:'));
+    log(chalk.blue('Installing browser binaries used by this regressify release:'));
     browserInstallTargets.forEach((target) => {
-      console.log(`- ${target.name}: ${target.browserVersion}`);
+      log(`- ${target.name}: ${target.browserVersion}`);
     });
-    console.log(chalk.blue('Use these versions for BrowserStack browserVersion values when you need parity.'));
+    log(chalk.blue('Use these versions for BrowserStack browserVersion values when you need parity.'));
 
-    const result = spawnSync(process.execPath, [playwrightCliPath, 'install', ...browserInstallTargets.map((target) => target.name)], {
+    const result = spawn(execPath, [playwrightCliPath, 'install', ...browserInstallTargets.map((target) => target.name)], {
       stdio: 'inherit',
-      env: process.env,
+      env,
     });
 
     if (result.error) {
@@ -87,11 +111,12 @@ export function installBrowsers() {
     }
 
     if (result.status !== 0) {
-      exit(result.status);
+      exitFn(result.status);
+      return;
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.log(chalk.red(message));
-    exit(1);
+    log(chalk.red(message));
+    exitFn(1);
   }
 }

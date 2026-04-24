@@ -2,6 +2,19 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 
+export function mergeRegressifyPackageScripts(packageJson: Record<string, unknown>) {
+  const nextPackageJson = JSON.parse(JSON.stringify(packageJson || {})) as Record<string, unknown> & {
+    scripts?: Record<string, string>;
+  };
+
+  nextPackageJson.scripts = nextPackageJson.scripts || {};
+  nextPackageJson.scripts.ref = 'regressify ref';
+  nextPackageJson.scripts.approve = 'regressify approve';
+  nextPackageJson.scripts.test = 'regressify test';
+
+  return nextPackageJson;
+}
+
 export async function updatePackageJson() {
   try {
     const packageJsonPath = path.join(process.cwd(), 'package.json');
@@ -11,12 +24,7 @@ export async function updatePackageJson() {
     }
 
     const packageJsonText = fs.readFileSync(packageJsonPath, 'utf8');
-    const packageJson = JSON.parse(packageJsonText);
-
-    packageJson.scripts = packageJson.scripts || {};
-    packageJson.scripts.ref = 'regressify ref';
-    packageJson.scripts.approve = 'regressify approve';
-    packageJson.scripts.test = 'regressify test';
+    const packageJson = mergeRegressifyPackageScripts(JSON.parse(packageJsonText));
 
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
   } catch (error) {

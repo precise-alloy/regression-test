@@ -10,8 +10,8 @@ import { installBrowsers } from './install.js';
 function logErrorAndExit() {
   console.log(
     chalk.red(
-      "Invalid command. Use one of the following: 'regressify init', 'regressify install', 'regressify ref', 'regressify approve', 'regressify test', 'regressify snapshot', 'regressify version'.",
-    ),
+      "Invalid command. Use one of the following: 'regressify init', 'regressify install', 'regressify ref', 'regressify approve', 'regressify test', 'regressify snapshot', 'regressify version'."
+    )
   );
   exit(1);
 }

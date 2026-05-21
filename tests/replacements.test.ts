@@ -47,7 +47,7 @@ describe('replacements.ts', () => {
 
   it('applies plain-string replacements in declaration order', () => {
     const output = applyReplacements('https://prod.example.com/home', [
-      { ref: 'https://prod.example.com', test: 'https://test.example.com' },
+      { ref: 'https://prod\\.example\\.com', test: 'https://test.example.com' },
       { ref: '/home', test: '/landing' },
     ]);
 

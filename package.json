@@ -8,8 +8,9 @@
     "regressify": "./src/index.js"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "build": "tsc --project tsconfig.json && tsc --project tsconfig.engine.json && tsx scripts/fix-engine-exports.ts",
+    "build:engine": "tsc --project tsconfig.engine.json && tsx scripts/fix-engine-exports.ts",
+    "typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.engine.json --noEmit",
     "install:browsers": "tsx src/index.ts install",
     "ref": "tsx src/index.ts ref",
     "approve": "tsx src/index.ts approve",

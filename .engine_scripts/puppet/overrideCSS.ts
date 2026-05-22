@@ -1,7 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import type { Page } from 'puppeteer';
+import type { EngineScenario, PuppetOverrideCSS } from '../engine.js';
 
-module.exports = async (page, scenario) => {
+export default (async (page: Page, scenario: EngineScenario): Promise<void> => {
   const cssOverridePath = scenario.cssOverridePath;
 
   if (!cssOverridePath) {
@@ -18,11 +19,11 @@ module.exports = async (page, scenario) => {
   await page.evaluate(() => {
     const style = document.createElement('style');
     style.type = 'text/css';
-    const styleNode = document.createTextNode(window._styleData);
+    const styleNode = document.createTextNode(window._styleData!);
     style.appendChild(styleNode);
     document.head.appendChild(style);
   });
 
   console.log('BACKSTOP_TEST_CSS_OVERRIDE injected for: ' + scenario.label);
   // console.log(override);
-};
+}) as PuppetOverrideCSS;

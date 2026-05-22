@@ -1,4 +1,7 @@
-const fs = require('fs');
+import * as fs from 'fs';
+import type { Page } from 'playwright';
+import type { EngineScenario, OverrideCSS } from '../engine.js';
+
 const chalkImport = import('chalk').then((m) => m.default);
 
 /**
@@ -14,10 +17,11 @@ const chalkImport = import('chalk').then((m) => m.default);
  *
  */
 
-module.exports = async (page, scenario) => {
+export default (async (page: Page, scenario: EngineScenario): Promise<void> => {
   const cssOverridePath = scenario.cssOverridePath;
   const chalk = await chalkImport;
   const logPrefix = chalk.yellow(`[${scenario.index} of ${scenario.total}] `);
+  console.log('cssOverridePath', cssOverridePath);
 
   if (!cssOverridePath) {
     return;
@@ -35,4 +39,4 @@ module.exports = async (page, scenario) => {
 
   console.log(logPrefix + 'BACKSTOP_TEST_CSS_OVERRIDE injected for: ' + scenario.label);
   // console.log(override);
-};
+}) as OverrideCSS;

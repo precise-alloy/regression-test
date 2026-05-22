@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "node16", //Frozen configuration - Upgrading TypeScript won't silently change how the engine scripts compile
+    "moduleResolution": "node16",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "isolatedModules": false,
+    "composite": false,
+    "declaration": false,
+    "sourceMap": true,
+    "noEmit": false,
+    "rootDir": ".engine_scripts",
+    "outDir": ".engine_scripts"
+  },
+  "include": [".engine_scripts/**/*.ts"],
+  "exclude": ["node_modules"]
+}

@@ -1,13 +1,16 @@
-const fs = require('fs');
+import * as fs from 'fs';
+import type { Page } from 'playwright';
+import type { EngineScenario, EmbedFiles, OverrideCSS } from '../engine.js';
+
 const chalkImport = import('chalk').then((m) => m.default);
 
-const embedCss = async (scenario, page) => {
+const embedCss = async (scenario: EngineScenario, page: Page): Promise<void> => {
   if (scenario.useCssOverride) {
-    await require('./overrideCSS')(page, scenario);
+    await (require('./overrideCSS') as OverrideCSS)(page, scenario);
   }
 };
 
-const embedJs = async (scenario, page) => {
+const embedJs = async (scenario: EngineScenario, page: Page): Promise<void> => {
   const jsOnReadyPath = scenario.jsOnReadyPath;
   const chalk = await chalkImport;
   const logPrefix = chalk.yellow(`[${scenario.index} of ${scenario.total}] `);
@@ -22,7 +25,7 @@ const embedJs = async (scenario, page) => {
   }
 };
 
-module.exports = async (scenario, page) => {
+export default (async (scenario: EngineScenario, page: Page): Promise<void> => {
   await embedJs(scenario, page);
   await embedCss(scenario, page);
-};
+}) as EmbedFiles;

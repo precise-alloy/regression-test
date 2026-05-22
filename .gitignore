@@ -4,6 +4,8 @@ backstop_data/
 src/**/*.js
 src/**/*.d.ts
 src/**/*.map
+.engine_scripts/**/*.js
+.engine_scripts/**/*.map
 *.tsbuildinfo
 .states/
 visual_tests/

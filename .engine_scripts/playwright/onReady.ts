@@ -44,8 +44,8 @@ export default (async (
 
   if (scenario.postInteractionWait) {
     const interactionWait = parseInt(String(scenario.postInteractionWait));
-    if (!Number.isNaN(interactionWait) && interactionWait > 0) {
-      await page.waitForTimeout(scenario.postInteractionWait as number);
+    if (!Number.isNaN(interactionWait) && interactionWait >= 0) {
+      await page.waitForTimeout(interactionWait);
     } else {
       await page.waitForSelector(scenario.postInteractionWait as string);
     }

@@ -31,8 +31,8 @@ export default (async (page: Page, scenario: EngineScenario): Promise<void> => {
 
   if (postInteractionWait) {
     const interactionWait = parseInt(String(postInteractionWait));
-    if (!Number.isNaN(interactionWait) && interactionWait > 0) {
-      await (page as unknown as { waitForTimeout(ms: number): Promise<void> }).waitForTimeout(postInteractionWait as number);
+    if (!Number.isNaN(interactionWait) && interactionWait >= 0) {
+      await (page as unknown as { waitForTimeout(ms: number): Promise<void> }).waitForTimeout(interactionWait);
     } else {
       await page.waitForSelector(postInteractionWait as string);
     }

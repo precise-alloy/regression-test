@@ -30,7 +30,12 @@ export default (async (page: Page | Frame, scenario: EngineScenario): Promise<vo
   }
 
   if (postInteractionWait) {
-    await page.waitForTimeout(postInteractionWait);
+    const interactionWait = parseInt(String(postInteractionWait));
+    if (!Number.isNaN(interactionWait) && interactionWait > 0) {
+      await page.waitForTimeout(postInteractionWait as number);
+    } else {
+      await page.waitForSelector(postInteractionWait as string);
+    }
   }
 
   if (scrollToSelector) {

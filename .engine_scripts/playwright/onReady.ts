@@ -43,6 +43,11 @@ export default (async (
   // await page.waitForLoadState('load', { timeout: 5000 });
 
   if (scenario.postInteractionWait) {
-    await page.waitForTimeout(scenario.postInteractionWait);
+    const interactionWait = parseInt(String(scenario.postInteractionWait));
+    if (!Number.isNaN(interactionWait) && interactionWait > 0) {
+      await page.waitForTimeout(scenario.postInteractionWait as number);
+    } else {
+      await page.waitForSelector(scenario.postInteractionWait as string);
+    }
   }
 }) as OnReadyScript;

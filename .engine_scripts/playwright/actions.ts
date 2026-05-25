@@ -174,7 +174,8 @@ export default (async (context: ActionsContext): Promise<void> => {
         await (page as Page).waitForURL(url);
       }
 
-      if (parseInt(String(action.wait)) > 0 && !Number.isNaN(parseInt(String(action.wait)))) {
+      const waitTimeMs = parseInt(String(action.wait));
+      if (!Number.isNaN(waitTimeMs) && waitTimeMs > 0) {
         await page.waitForTimeout(action.wait as number);
       } else {
         await page.waitForSelector(action.wait as string);

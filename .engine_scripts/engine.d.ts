@@ -28,7 +28,7 @@ export interface ScenarioAction {
   label?: string;
   uncheck?: string;
   wait?: number | string;
-  url?: string;
+  url: string;
   persist?: string;
   path?: string;
 }
@@ -44,7 +44,7 @@ export interface EngineScenario extends Scenario {
   cssOverridePath?: string;
   jsOnReadyPath?: string;
   noScrollTop?: boolean;
-  postInteractionWait?: number | string;
+  postInteractionWait?: number;
   hoverSelector?: string | string[];
   hoverSelectors?: string | string[];
   clickSelector?: string | string[];

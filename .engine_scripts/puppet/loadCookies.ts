@@ -22,6 +22,9 @@ export default (async (page: Page, scenario: EngineScenario): Promise<void> => {
   // MUNGE COOKIE DOMAIN
   [].forEach.call(cookiesFromFile, (c: CookieInput) => {
     let domains = typeof c.domain === 'string' ? [c.domain] : c.domain;
+    if (!domains || domains.length === 0) {
+      return;
+    }
 
     [].forEach.call(domains, (domain: string) => {
       const cookie: Record<string, unknown> = { ...c };

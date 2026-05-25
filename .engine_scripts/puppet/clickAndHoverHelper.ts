@@ -30,7 +30,7 @@ export default (async (page: Page, scenario: EngineScenario): Promise<void> => {
   }
 
   if (postInteractionWait) {
-    await (page as unknown as { waitForTimeout(ms: number): Promise<void> }).waitForTimeout(postInteractionWait as number);
+    await (page as unknown as { waitForTimeout(ms: number): Promise<void> }).waitForTimeout(postInteractionWait);
   }
 
   if (scrollToSelector) {

@@ -23,8 +23,8 @@ const IMAGE_DATA_BUFFER = fs.readFileSync(IMAGE_STUB_URL);
 const HEADERS_STUB = {};
 
 export default async function (page: Page, scenario: EngineScenario): Promise<void> {
-  page.route(IMAGE_URL_RE, (route) => {
-    route.fulfill({
+  await page.route(IMAGE_URL_RE, async (route) => {
+    await route.fulfill({
       body: IMAGE_DATA_BUFFER,
       headers: HEADERS_STUB,
       status: 200,

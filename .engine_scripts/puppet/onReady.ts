@@ -13,15 +13,14 @@ export default (async (page: Page, scenario: EngineScenario, vp: Viewport): Prom
 
   const jsOnReadyPath = scenario.jsOnReadyPath;
 
-  if (!jsOnReadyPath) {
-    return;
-  } else if (!fs.existsSync(jsOnReadyPath)) {
-    console.log('File not exist: ' + jsOnReadyPath);
-    return;
+  if (jsOnReadyPath) {
+    if (!fs.existsSync(jsOnReadyPath)) {
+      console.log('File not exist: ' + jsOnReadyPath);
+    } else {
+      const jsOnReadyScript = fs.readFileSync(jsOnReadyPath, 'utf-8');
+      await page.evaluate(jsOnReadyScript).then(() => 'ONREADY script executed for: ' + scenario.label);
+    }
   }
-
-  const jsOnReadyScript = fs.readFileSync(jsOnReadyPath, 'utf-8');
-  await page.evaluate(jsOnReadyScript).then(() => 'ONREADY script executed for: ' + scenario.label);
 
   // add more ready handlers here...
   await page.evaluate(autoScroll as Parameters<typeof page.evaluate>[0]);

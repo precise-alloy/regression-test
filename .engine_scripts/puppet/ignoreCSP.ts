@@ -78,7 +78,7 @@ export default async function (page: Page, scenario: EngineScenario): Promise<vo
   };
 
   await page.setRequestInterception(true);
-  page.on('request', (req) => {
-    intercept(req, scenario.url!);
+  page.on('request', async (req) => {
+    await intercept(req, scenario.url);
   });
 }

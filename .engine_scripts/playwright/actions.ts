@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as YAML from 'js-yaml';
 import type { Page, Frame, ElementHandle } from 'playwright';
 import type { ActionsContext, ScenarioAction, Actions } from '../engine.js';
 
@@ -175,7 +174,7 @@ export default (async (context: ActionsContext): Promise<void> => {
         await (page as Page).waitForURL(url);
       }
 
-      if (parseInt(String(action.wait)) > 0) {
+      if (parseInt(String(action.wait)) > 0 && !Number.isNaN(parseInt(String(action.wait)))) {
         await page.waitForTimeout(action.wait as number);
       } else {
         await page.waitForSelector(action.wait as string);

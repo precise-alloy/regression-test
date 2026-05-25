@@ -18,6 +18,6 @@
     "rootDir": ".engine_scripts",
     "outDir": ".engine_scripts"
   },
-  "include": [".engine_scripts/**/*.ts"],
+  "include": [".engine_scripts/**/*.ts", ".engine_scripts/**/*.d.ts"],
   "exclude": ["node_modules"]
 }

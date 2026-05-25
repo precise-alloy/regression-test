@@ -28,7 +28,14 @@ export default (async (context: ActionsContext): Promise<void> => {
       for (let j = 0; j < frames.length; j++) {
         await page.waitForSelector(frames[j]);
         const handle = (await page.locator(frames[j]).elementHandle()) as ElementHandle<SVGElement | HTMLElement>;
-        page = (await handle.contentFrame())!;
+        if (handle === null) {
+          throw new Error(`iframe element not found for selector: ${frames[j]}`);
+        }
+        const frame = await handle.contentFrame();
+        if (frame === null) {
+          throw new Error(`contentFrame missing for iframe element matching selector: ${frames[j]}`);
+        }
+        page = frame;
       }
     }
 
@@ -107,8 +114,8 @@ export default (async (context: ActionsContext): Promise<void> => {
         });
 
         if (action.useFileChooser) {
-          const fileChooserPromise = (page as Page).waitForEvent('filechooser');
-          el.click();
+          const fileChooserPromise = currentPage.waitForEvent('filechooser');
+          await el.click();
           const fileChooser = await fileChooserPromise;
           await fileChooser.setFiles(normalizedPaths);
         } else {
@@ -120,7 +127,7 @@ export default (async (context: ActionsContext): Promise<void> => {
     if (!!action.remove) {
       console.log(logPrefix + 'Remove:', action.remove);
       await page.waitForSelector(action.remove);
-      let el = await page.locator(action.hide as string);
+      let el = await page.locator(action.remove);
       await el.evaluate((node) => node.style.setProperty('display', 'none', 'important'));
     }
 

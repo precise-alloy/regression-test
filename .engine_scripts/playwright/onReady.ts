@@ -5,6 +5,10 @@ import autoScroll from '../auto-scroll.js';
 import scrollTop from '../scroll-top.js';
 
 const chalkImport = import('chalk').then((m) => m.default);
+const embedFiles = require('./embedFiles') as EmbedFiles;
+const autoScrolls = require('../auto-scroll') as BrowserScript;
+const actions = require('./actions') as Actions;
+const clickAndHoverHelper = require('./clickAndHoverHelper') as ClickAndHoverHelper;
 
 export default (async (
   page: Page,
@@ -13,15 +17,15 @@ export default (async (
   isReference: boolean,
   browserContext: BrowserContext
 ): Promise<void> => {
-  await (require('./embedFiles') as EmbedFiles)(scenario, page);
+  await embedFiles(scenario, page);
   await page.evaluate(autoScroll);
   const chalk = await chalkImport;
   const logPrefix = chalk.yellow(`[${scenario.index} of ${scenario.total}] `);
 
   page.on('load', async (data) => {
     try {
-      await (require('./embedFiles') as EmbedFiles)(scenario, data);
-      await data.evaluate(require('../auto-scroll') as BrowserScript);
+      await embedFiles(scenario, data);
+      await data.evaluate(autoScrolls);
     } catch (error) {
       console.log(logPrefix + error);
     }
@@ -30,9 +34,9 @@ export default (async (
   console.log(logPrefix + 'SCENARIO > ' + scenario.label);
 
   if (!!scenario.actions) {
-    await (require('./actions') as Actions)({ currentPage: page, scenario, browserContext });
+    await actions({ currentPage: page, scenario, browserContext });
   } else {
-    await (require('./clickAndHoverHelper') as ClickAndHoverHelper)(page, scenario);
+    await clickAndHoverHelper(page, scenario);
   }
 
   if (!scenario.noScrollTop) {

@@ -20,7 +20,8 @@
     "test:coverage": "vitest run --coverage",
     "test:ci": "vitest run --coverage --reporter=dot",
     "snapshot": "tsx src/index.ts snapshot",
-    "ver": "bun version"
+    "ver": "bun version",
+    "prepare": "tsc --project tsconfig.engine.json && tsx scripts/fix-engine-exports.ts"
   },
   "repository": {
     "type": "git",

@@ -38,10 +38,7 @@ for (const file of files) {
   }
 
   const mapIndex = content.indexOf(SOURCE_MAP_COMMENT);
-  const updated =
-    mapIndex >= 0
-      ? content.slice(0, mapIndex) + SNIPPET + content.slice(mapIndex)
-      : content.replace(/\s*$/, '\n') + SNIPPET;
+  const updated = mapIndex >= 0 ? content.slice(0, mapIndex) + SNIPPET + content.slice(mapIndex) : content.replace(/\s*$/, '\n') + SNIPPET;
 
   fs.writeFileSync(file, updated);
   patched++;

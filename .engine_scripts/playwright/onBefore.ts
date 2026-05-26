@@ -1,4 +1,14 @@
-module.exports = async (page, scenario, viewport, isReference, browserContext) => {
+import type { Page, BrowserContext } from 'playwright';
+import type { Viewport } from 'backstopjs';
+import type { EngineScenario, OnBeforeScript, LoadCookies } from '../engine.js';
+
+export default (async (
+  page: Page,
+  scenario: EngineScenario,
+  viewport: Viewport,
+  isReference: boolean,
+  browserContext: BrowserContext
+): Promise<void> => {
   if (scenario.bypassCsp) {
     const browser = browserContext.browser();
     const browserName = browser ? browser.browserType().name() : undefined;
@@ -11,5 +21,5 @@ module.exports = async (page, scenario, viewport, isReference, browserContext) =
     }
   }
 
-  await require('./loadCookies')(browserContext, scenario);
-};
+  await (require('./loadCookies') as LoadCookies)(browserContext, scenario);
+}) as OnBeforeScript;

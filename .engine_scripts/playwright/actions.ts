@@ -1,9 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const YAML = require('js-yaml');
+import * as fs from 'fs';
+import * as path from 'path';
+import type { Page, Frame, ElementHandle } from 'playwright';
+import type { ActionsContext, ScenarioAction, Actions } from '../engine.js';
+
 const chalkImport = import('chalk').then((m) => m.default);
 
-module.exports = async (context) => {
+export default (async (context: ActionsContext): Promise<void> => {
   const { currentPage, scenario, browserContext } = context;
 
   if (!scenario.actions) {
@@ -14,8 +16,8 @@ module.exports = async (context) => {
   const logPrefix = chalk.yellow(`[${scenario.index} of ${scenario.total}] `);
 
   for (let i = 0; i < scenario.actions.length; i++) {
-    let page = currentPage;
-    let action = scenario.actions[i];
+    let page: Page | Frame = currentPage;
+    let action: ScenarioAction = scenario.actions[i];
 
     if (!action) {
       continue;
@@ -25,8 +27,15 @@ module.exports = async (context) => {
       const frames = typeof action.frame === 'string' ? [action.frame] : action.frame;
       for (let j = 0; j < frames.length; j++) {
         await page.waitForSelector(frames[j]);
-        const handle = await page.locator(frames[j]).elementHandle();
-        page = await handle.contentFrame();
+        const handle = (await page.locator(frames[j]).elementHandle()) as ElementHandle<SVGElement | HTMLElement>;
+        if (handle === null) {
+          throw new Error(`iframe element not found for selector: ${frames[j]}`);
+        }
+        const frame = await handle.contentFrame();
+        if (frame === null) {
+          throw new Error(`contentFrame missing for iframe element matching selector: ${frames[j]}`);
+        }
+        page = frame;
       }
     }
 
@@ -79,7 +88,7 @@ module.exports = async (context) => {
         let el = await page.locator(action.input);
 
         if (!action.append) {
-          await el.evaluate((node) => (node.value = ''));
+          await el.evaluate((node) => ((node as HTMLInputElement).value = ''));
         }
 
         await el.type(action.value);
@@ -89,7 +98,7 @@ module.exports = async (context) => {
         let el = await page.locator(action.input);
 
         const files = typeof action.file === 'string' ? [action.file] : action.file;
-        let normalizedPaths = [];
+        let normalizedPaths: string[] = [];
 
         files.forEach((file) => {
           if (path.isAbsolute(file)) {
@@ -105,8 +114,8 @@ module.exports = async (context) => {
         });
 
         if (action.useFileChooser) {
-          const fileChooserPromise = page.waitForEvent('filechooser');
-          el.click();
+          const fileChooserPromise = currentPage.waitForEvent('filechooser');
+          await el.click();
           const fileChooser = await fileChooserPromise;
           await fileChooser.setFiles(normalizedPaths);
         } else {
@@ -118,21 +127,21 @@ module.exports = async (context) => {
     if (!!action.remove) {
       console.log(logPrefix + 'Remove:', action.remove);
       await page.waitForSelector(action.remove);
-      let el = await page.locator(action.hide);
+      let el = await page.locator(action.remove);
       await el.evaluate((node) => node.style.setProperty('display', 'none', 'important'));
     }
 
     if (!!action.press) {
       console.log(logPrefix + 'Press:', action.press);
       await page.waitForSelector(action.press);
-      await page.locator(action.press).press(action.key);
+      await page.locator(action.press).press(action.key!);
     }
 
     if (!!action.scroll) {
       console.log(logPrefix + 'Scroll:', action.scroll);
       await page.waitForSelector(action.scroll);
-      await page.evaluate((scrollToSelector) => {
-        document.querySelector(scrollToSelector).scrollIntoView();
+      await page.evaluate((scrollToSelector: string) => {
+        document.querySelector(scrollToSelector)!.scrollIntoView();
       }, action.scroll);
     }
 
@@ -169,13 +178,14 @@ module.exports = async (context) => {
         if (!!scenario.getTestUrl) {
           url = scenario.getTestUrl(url);
         }
-        await page.waitForURL(url);
+        await (page as Page).waitForURL(url);
       }
 
-      if (parseInt(action.wait) > 0) {
-        await page.waitForTimeout(action.wait);
+      const waitTimeMs = parseInt(String(action.wait));
+      if (!Number.isNaN(waitTimeMs) && waitTimeMs >= 0) {
+        await page.waitForTimeout(waitTimeMs);
       } else {
-        await page.waitForSelector(action.wait);
+        await page.waitForSelector(action.wait as string);
       }
     }
 
@@ -184,4 +194,4 @@ module.exports = async (context) => {
       await browserContext.storageState({ path: action.path });
     }
   }
-};
+}) as Actions;

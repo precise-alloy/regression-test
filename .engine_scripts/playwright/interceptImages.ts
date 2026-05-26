@@ -12,20 +12,22 @@
  *
  */
 
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
+import type { Page } from 'playwright';
+import type { EngineScenario } from '../engine.js';
 
 const IMAGE_URL_RE = /\.gif|\.jpg|\.png/i;
 const IMAGE_STUB_URL = path.resolve(__dirname, '../../imageStub.jpg');
 const IMAGE_DATA_BUFFER = fs.readFileSync(IMAGE_STUB_URL);
 const HEADERS_STUB = {};
 
-module.exports = async function (page, scenario) {
-  page.route(IMAGE_URL_RE, route => {
-    route.fulfill({
+export default async function (page: Page, scenario: EngineScenario): Promise<void> {
+  await page.route(IMAGE_URL_RE, async (route) => {
+    await route.fulfill({
       body: IMAGE_DATA_BUFFER,
       headers: HEADERS_STUB,
-      status: 200
+      status: 200,
     });
   });
-};
+}

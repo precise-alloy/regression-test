@@ -20,14 +20,33 @@
  *
  */
 
-const fetch = require('node-fetch');
-const https = require('https');
+import * as https from 'https';
+import type { Page } from 'puppeteer';
+import type { EngineScenario } from '../engine.js';
+
+// node-fetch is not a declared dependency; typed to reflect the subset used here
+type FetchFn = (
+  url: string,
+  options: {
+    headers: Record<string, string>;
+    body: string | undefined;
+    method: string;
+    follow: number;
+    agent: https.Agent;
+  }
+) => Promise<{
+  buffer(): Promise<Buffer>;
+  headers: { _headers: Record<string, string | string[]> };
+  status: number;
+}>;
+
+const fetch = require('node-fetch') as FetchFn;
 const agent = new https.Agent({
   rejectUnauthorized: false,
 });
 
-module.exports = async function (page, scenario) {
-  const intercept = async (request, targetUrl) => {
+export default async function (page: Page, scenario: EngineScenario): Promise<void> {
+  const intercept = async (request: Parameters<Parameters<typeof page.on<'request'>>[1]>[0], targetUrl: string): Promise<void> => {
     const requestUrl = request.url();
 
     // FIND TARGET URL REQUEST
@@ -50,7 +69,7 @@ module.exports = async function (page, scenario) {
       cleanedHeaders['content-security-policy'] = '';
       await request.respond({
         body: buffer,
-        headers: cleanedHeaders,
+        headers: cleanedHeaders as Record<string, string>,
         status: result.status,
       });
     } else {
@@ -59,7 +78,7 @@ module.exports = async function (page, scenario) {
   };
 
   await page.setRequestInterception(true);
-  page.on('request', (req) => {
-    intercept(req, scenario.url);
+  page.on('request', async (req) => {
+    await intercept(req, scenario.url);
   });
-};
+}

@@ -1,7 +1,7 @@
-module.exports = async () => {
+export default async (): Promise<void> => {
   const SCROLL_TOP_MAX = 100;
 
-  await new Promise((resolve) => {
+  await new Promise<void>((resolve) => {
     const timer = setInterval(() => {
       if (!window.visualTestScrollingBottom) {
         clearInterval(timer);
@@ -11,7 +11,7 @@ module.exports = async () => {
     }, 100);
   });
 
-  await new Promise((resolve) => {
+  await new Promise<void>((resolve) => {
     let counter = 0;
     const timer = setInterval(() => {
       if (window.scrollY === 0 || counter > SCROLL_TOP_MAX) {

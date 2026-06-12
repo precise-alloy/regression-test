@@ -196,7 +196,9 @@ export function resolveBasicAuth(
   const password = expandEnvReferences(resolved.password ?? '', env);
 
   if (!origin || !username || !password) {
-    console.warn(chalk.yellow('basicAuth is set but origin, username, or password resolved to an invalid/empty value; skipping Basic auth credentials.'));
+    console.warn(
+      chalk.yellow('basicAuth is set but origin, username, or password resolved to an invalid/empty value; skipping Basic auth credentials.')
+    );
     return undefined;
   }
 

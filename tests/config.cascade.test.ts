@@ -1,7 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getConfigs, getScenarios, resolveScenarioOptions, resolveViewports, expandEnvReferences, normalizeHttpOrigin, resolveBasicAuth } from '../src/config.ts';
+import {
+  getConfigs,
+  getScenarios,
+  resolveScenarioOptions,
+  resolveViewports,
+  expandEnvReferences,
+  normalizeHttpOrigin,
+  resolveBasicAuth,
+} from '../src/config.ts';
 import { createTempWorkspace, useWorkspace, writeWorkspaceFile } from './test-utils.ts';
 
 afterEach(() => {
@@ -36,7 +44,13 @@ describe('config cascade and final Backstop config assembly', () => {
   });
 
   it('resolves basicAuth across scenario -> suite -> workspace and expands env references', () => {
-    const env = { WS_ORIGIN: 'https://workspace.example.com/path', WS_USER: 'wsuser', WS_PASS: 'wspass', SUITE_USER: 'suiteuser', SUITE_PASS: 'suitepass' } as NodeJS.ProcessEnv;
+    const env = {
+      WS_ORIGIN: 'https://workspace.example.com/path',
+      WS_USER: 'wsuser',
+      WS_PASS: 'wspass',
+      SUITE_USER: 'suiteuser',
+      SUITE_PASS: 'suitepass',
+    } as NodeJS.ProcessEnv;
 
     expect(resolveBasicAuth(undefined, undefined, { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' }, env)).toEqual({
       origin: 'https://workspace.example.com',
@@ -53,7 +67,9 @@ describe('config cascade and final Backstop config assembly', () => {
       )
     ).toEqual({ origin: 'https://suite.example.com', username: 'suiteuser', password: 'suitepass' });
 
-    expect(resolveBasicAuth({ origin: 'http://literal.example.com:8080/path', username: 'literal', password: 'literalpass' }, undefined, undefined, env)).toEqual({
+    expect(
+      resolveBasicAuth({ origin: 'http://literal.example.com:8080/path', username: 'literal', password: 'literalpass' }, undefined, undefined, env)
+    ).toEqual({
       origin: 'http://literal.example.com:8080',
       username: 'literal',
       password: 'literalpass',

@@ -1,19 +1,24 @@
 module.exports = async (page, scenario, viewport, isReference, browserContext) => {
-  if (scenario.basicAuth && scenario.basicAuth.username && scenario.basicAuth.password) {
-    const token = Buffer.from(`${scenario.basicAuth.username}:${scenario.basicAuth.password}`).toString('base64');
+  if (scenario.basicAuth && scenario.basicAuth.origin && scenario.basicAuth.username && scenario.basicAuth.password) {
     const targetUrl = isReference && scenario.referenceUrl ? scenario.referenceUrl : scenario.url;
     const targetOrigin = new URL(targetUrl).origin;
 
-    // Scope the Authorization header to the protected origin only, so the
-    // credentials are never broadcast to third-party subresources (analytics,
-    // CDNs, fonts, etc.) the page might request.
-    await page.route(
-      (url) => url.origin === targetOrigin,
-      async (route) => {
-        const headers = { ...route.request().headers(), authorization: `Basic ${token}` };
-        await route.continue({ headers });
-      }
-    );
+    if (scenario.basicAuth.origin === targetOrigin) {
+      // Backstop creates the browser context before this hook runs. Set
+      // Playwright HTTP credentials on that fresh per-scenario context so the
+      // browser responds only to Basic-auth challenges for the configured
+      // origin, without broadcasting Authorization headers to subresources or
+      // redirects.
+      await browserContext.setHTTPCredentials({
+        origin: scenario.basicAuth.origin,
+        username: scenario.basicAuth.username,
+        password: scenario.basicAuth.password,
+      });
+    } else {
+      console.warn(
+        `basicAuth origin ${scenario.basicAuth.origin} does not match scenario origin ${targetOrigin}; skipping Basic auth credentials for ${scenario.label}`
+      );
+    }
   }
 
   if (scenario.bypassCsp) {

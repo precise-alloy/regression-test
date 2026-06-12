@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getConfigs, getScenarios, resolveScenarioOptions, resolveViewports, expandEnvReferences, resolveBasicAuth } from '../src/config.ts';
+import { getConfigs, getScenarios, resolveScenarioOptions, resolveViewports, expandEnvReferences, normalizeHttpOrigin, resolveBasicAuth } from '../src/config.ts';
 import { createTempWorkspace, useWorkspace, writeWorkspaceFile } from './test-utils.ts';
 
 afterEach(() => {
@@ -36,28 +36,43 @@ describe('config cascade and final Backstop config assembly', () => {
   });
 
   it('resolves basicAuth across scenario -> suite -> workspace and expands env references', () => {
-    const env = { WS_USER: 'wsuser', WS_PASS: 'wspass', SUITE_USER: 'suiteuser', SUITE_PASS: 'suitepass' } as NodeJS.ProcessEnv;
+    const env = { WS_ORIGIN: 'https://workspace.example.com/path', WS_USER: 'wsuser', WS_PASS: 'wspass', SUITE_USER: 'suiteuser', SUITE_PASS: 'suitepass' } as NodeJS.ProcessEnv;
 
-    expect(resolveBasicAuth(undefined, undefined, { username: '${WS_USER}', password: '${WS_PASS}' }, env)).toEqual({
+    expect(resolveBasicAuth(undefined, undefined, { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' }, env)).toEqual({
+      origin: 'https://workspace.example.com',
       username: 'wsuser',
       password: 'wspass',
     });
 
     expect(
-      resolveBasicAuth(undefined, { username: '${SUITE_USER}', password: '${SUITE_PASS}' }, { username: '${WS_USER}', password: '${WS_PASS}' }, env)
-    ).toEqual({ username: 'suiteuser', password: 'suitepass' });
+      resolveBasicAuth(
+        undefined,
+        { origin: 'https://suite.example.com', username: '${SUITE_USER}', password: '${SUITE_PASS}' },
+        { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' },
+        env
+      )
+    ).toEqual({ origin: 'https://suite.example.com', username: 'suiteuser', password: 'suitepass' });
 
-    expect(resolveBasicAuth({ username: 'literal', password: 'literalpass' }, undefined, undefined, env)).toEqual({
+    expect(resolveBasicAuth({ origin: 'http://literal.example.com:8080/path', username: 'literal', password: 'literalpass' }, undefined, undefined, env)).toEqual({
+      origin: 'http://literal.example.com:8080',
       username: 'literal',
       password: 'literalpass',
     });
   });
 
-  it('returns undefined basicAuth when unset or when a referenced env var is missing', () => {
+  it('normalizes only http and https origins for basicAuth', () => {
+    expect(normalizeHttpOrigin('https://example.com/path?x=1')).toBe('https://example.com');
+    expect(normalizeHttpOrigin('http://example.com:8080/path')).toBe('http://example.com:8080');
+    expect(normalizeHttpOrigin('ftp://example.com')).toBeUndefined();
+    expect(normalizeHttpOrigin('not-a-url')).toBeUndefined();
+  });
+
+  it('returns undefined basicAuth when unset, invalid, or when a referenced env var is missing', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     expect(resolveBasicAuth(undefined, undefined, undefined, {})).toBeUndefined();
-    expect(resolveBasicAuth(undefined, undefined, { username: '${MISSING}', password: '${ALSO_MISSING}' }, {})).toBeUndefined();
+    expect(resolveBasicAuth(undefined, undefined, { origin: '${MISSING}', username: '${MISSING}', password: '${ALSO_MISSING}' }, {})).toBeUndefined();
+    expect(resolveBasicAuth(undefined, undefined, { origin: 'ftp://example.com', username: 'user', password: 'pass' }, {})).toBeUndefined();
     expect(warn).toHaveBeenCalled();
   });
 
@@ -106,7 +121,7 @@ describe('config cascade and final Backstop config assembly', () => {
         requiredLogin: true,
         misMatchThreshold: 0.4,
         postInteractionWait: 4,
-        basicAuth: { username: '${BASIC_USER}', password: '${BASIC_PASS}' },
+        basicAuth: { origin: 'https://test.example.com/login', username: '${BASIC_USER}', password: '${BASIC_PASS}' },
       },
       testSuite: 'alloy',
       isRef: false,
@@ -135,7 +150,7 @@ describe('config cascade and final Backstop config assembly', () => {
       total: 4,
     });
 
-    expect(result.basicAuth).toEqual({ username: 'cascade-user', password: 'cascade-pass' });
+    expect(result.basicAuth).toEqual({ origin: 'https://test.example.com', username: 'cascade-user', password: 'cascade-pass' });
   });
 
   it('lets the global requiredLogin flag force true and keeps reference runs unmodified', () => {

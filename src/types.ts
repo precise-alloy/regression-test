@@ -16,9 +16,12 @@ export interface ReplacementsModel {
  *
  * Each value may reference an environment variable using `${VAR}` (or
  * `$VAR`) syntax so secrets stay out of committed YAML. Plain literals
- * are also accepted but discouraged.
+ * are also accepted but discouraged. `origin` must be the exact protected
+ * origin (scheme://host:port), so inherited credentials never apply to
+ * unrelated scenario URLs.
  */
 export interface BasicAuthModel {
+  origin: string;
   username: string;
   password: string;
 }

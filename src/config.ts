@@ -159,12 +159,25 @@ export function expandEnvReferences(value: string, env: NodeJS.ProcessEnv = proc
   });
 }
 
+export function normalizeHttpOrigin(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return undefined;
+    }
+
+    return url.origin;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Resolve `basicAuth` across scenario -> suite -> workspace and expand
  * any environment-variable references in the credentials. Returns
- * `undefined` when no level sets it, or when either resolved value is
- * empty (e.g. a referenced env var is missing) so the header is never
- * emitted with blank credentials.
+ * `undefined` when no level sets it, when the protected origin is invalid,
+ * or when either resolved credential is empty (e.g. a referenced env var is
+ * missing) so credentials are never applied ambiguously.
  */
 export function resolveBasicAuth(
   scenario?: BasicAuthModel,
@@ -177,15 +190,17 @@ export function resolveBasicAuth(
     return undefined;
   }
 
+  const originValue = expandEnvReferences(resolved.origin ?? '', env);
+  const origin = normalizeHttpOrigin(originValue);
   const username = expandEnvReferences(resolved.username ?? '', env);
   const password = expandEnvReferences(resolved.password ?? '', env);
 
-  if (!username || !password) {
-    console.warn(chalk.yellow('basicAuth is set but username or password resolved to an empty value; skipping Basic auth header.'));
+  if (!origin || !username || !password) {
+    console.warn(chalk.yellow('basicAuth is set but origin, username, or password resolved to an invalid/empty value; skipping Basic auth credentials.'));
     return undefined;
   }
 
-  return { username, password };
+  return { origin, username, password };
 }
 
 export function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level: number, trail?: string[]) {

@@ -131,8 +131,16 @@
     "BasicAuth": {
       "type": "object",
       "additionalProperties": false,
-      "description": "HTTP Basic Authentication credentials applied before navigation. Each value may reference an environment variable with ${VAR} or $VAR so secrets stay out of committed YAML.",
+      "description": "HTTP Basic Authentication credentials applied before navigation. Each value may reference an environment variable with ${VAR} or $VAR so secrets stay out of committed YAML. Origin must be the protected origin (scheme://host:port).",
       "properties": {
+        "origin": {
+          "type": "string",
+          "format": "uri",
+          "qt-uri-protocols": [
+            "http",
+            "https"
+          ]
+        },
         "username": {
           "type": "string"
         },
@@ -141,6 +149,7 @@
         }
       },
       "required": [
+        "origin",
         "username",
         "password"
       ],

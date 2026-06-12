@@ -134,11 +134,19 @@
       "description": "HTTP Basic Authentication credentials applied before navigation. Each value may reference an environment variable with ${VAR} or $VAR so secrets stay out of committed YAML. Origin must be the protected origin (scheme://host:port).",
       "properties": {
         "origin": {
-          "type": "string",
-          "format": "uri",
-          "qt-uri-protocols": [
-            "http",
-            "https"
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "qt-uri-protocols": [
+                "http",
+                "https"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^\\$\\{[A-Za-z_][A-Za-z0-9_]*\\}$|^\\$[A-Za-z_][A-Za-z0-9_]*$"
+            }
           ]
         },
         "username": {

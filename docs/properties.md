@@ -87,7 +87,7 @@ column shows the value Regressify uses when no level sets it.
 | `bypassCsp`           | `boolean`                             | `false`                  | workspace, suite, scenario | **strict-bool** Enables Chromium-only CSP bypass in the Playwright `onBefore` hook. Required to use `page.addStyleTag`/`addScriptTag` against pages with strict CSP. Has no effect on Firefox or WebKit.         |
 | `ignoreSslErrors`     | `boolean`                             | `true`                   | workspace, suite           | **strict-bool** Forwarded as `engineOptions.ignoreHTTPSErrors`.                                                                                                                                                  |
 | `state`               | `string`                              | —                        | workspace, suite           | Storage-state file name (under the state directory). When the file exists it is forwarded as `engineOptions.storageState`.                                                                                       |
-| `basicAuth`           | `{ username, password }`              | —                        | workspace, suite, scenario | HTTP Basic Authentication. Values may reference env vars with `${VAR}`/`$VAR`. Applied as an `Authorization` header in the Playwright `onBefore` hook before navigation. Skipped if either value resolves empty. |
+| `basicAuth`           | `{ username, password }`              | —                        | workspace, suite, scenario | HTTP Basic Authentication. Values may reference env vars with `${VAR}`/`$VAR`. Applied as an `Authorization` header (scoped to the target origin) in the Playwright `onBefore` hook before navigation. Skipped if either value resolves empty. |
 | `delay`               | `number`                              | `1000`                   | workspace, scenario        | Milliseconds Backstop waits before capturing. Skips the test-suite level.                                                                                                                                        |
 | `cookiePath`          | `string`                              | `common/_cookies.yaml`   | workspace, scenario        | Final default applied in `createScenario`. Skips the test-suite level.                                                                                                                                           |
 | `jsOnReadyPath`       | `string`                              | `common/_on-ready.js`    | workspace, scenario        | Final default applied in `createScenario`. Skips the test-suite level.                                                                                                                                           |
@@ -147,6 +147,10 @@ $env:STAGING_USER = 'myuser'; $env:STAGING_PASS = 'mypass'; regressify test --te
 `basicAuth` follows the normal cascade, so a suite or scenario can override the
 workspace default. If either resolved value is empty (for example an env var is
 unset), the header is skipped and a warning is logged.
+
+The `Authorization` header is sent only to requests matching the scenario
+URL's origin, so the credentials are never broadcast to third-party
+subresources (analytics, CDNs, fonts, etc.).
 
 ## Workspace-only behavior
 

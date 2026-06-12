@@ -3,7 +3,7 @@ import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
 import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
-import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig } from './types.js';
+import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig, BasicAuthModel } from './types.js';
 import chalk from 'chalk';
 import { exit } from 'process';
 import YAML from 'js-yaml';
@@ -134,6 +134,44 @@ export function resolveStrictBoolean(...values: Array<boolean | undefined>): boo
   return values.find((value) => typeof value === 'boolean');
 }
 
+/**
+ * Expand `${VAR}` and `$VAR` references in a string using `env`.
+ * Unset variables expand to an empty string. Strings without any
+ * reference are returned unchanged.
+ */
+export function expandEnvReferences(value: string, env: NodeJS.ProcessEnv = process.env): string {
+  return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (_match, braced, bare) => env[braced ?? bare] ?? '');
+}
+
+/**
+ * Resolve `basicAuth` across scenario -> suite -> workspace and expand
+ * any environment-variable references in the credentials. Returns
+ * `undefined` when no level sets it, or when either resolved value is
+ * empty (e.g. a referenced env var is missing) so the header is never
+ * emitted with blank credentials.
+ */
+export function resolveBasicAuth(
+  scenario?: BasicAuthModel,
+  suite?: BasicAuthModel,
+  workspace?: BasicAuthModel,
+  env: NodeJS.ProcessEnv = process.env
+): BasicAuthModel | undefined {
+  const resolved = scenario ?? suite ?? workspace;
+  if (!resolved) {
+    return undefined;
+  }
+
+  const username = expandEnvReferences(resolved.username ?? '', env);
+  const password = expandEnvReferences(resolved.password ?? '', env);
+
+  if (!username || !password) {
+    console.warn(chalk.yellow('basicAuth is set but username or password resolved to an empty value; skipping Basic auth header.'));
+    return undefined;
+  }
+
+  return { username, password };
+}
+
 export function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level: number, trail?: string[]) {
   const currentIdentifier = getScenarioIdentifier(model, `<anonymous:${level}>`);
   const currentTrail = trail ?? [currentIdentifier];
@@ -240,6 +278,7 @@ export function resolveScenarioOptions({
     useCssOverride: resolveStrictBoolean(scenario.useCssOverride, suite.useCssOverride, workspace.useCssOverride) ?? true,
     cssOverridePath: scenario.cssOverridePath ?? suite.cssOverridePath ?? workspace.cssOverridePath,
     bypassCsp: resolveStrictBoolean(scenario.bypassCsp, suite.bypassCsp, workspace.bypassCsp),
+    basicAuth: resolveBasicAuth(scenario.basicAuth, suite.basicAuth, workspace.basicAuth),
     jsOnReadyPath: scenario.jsOnReadyPath ?? workspace.jsOnReadyPath,
     cookiePath: scenario.cookiePath ?? workspace.cookiePath,
     noScrollTop: scenario.noScrollTop ?? workspace.noScrollTop,

@@ -98,6 +98,9 @@
         },
         "requiredLogin": {
           "type": "boolean"
+        },
+        "basicAuth": {
+          "$ref": "#/definitions/BasicAuth"
         }
       },
       "title": "WorkspaceConfig"
@@ -124,6 +127,24 @@
         "test"
       ],
       "title": "UrlReplacements"
+    },
+    "BasicAuth": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "HTTP Basic Authentication credentials applied before navigation. Each value may reference an environment variable with ${VAR} or $VAR so secrets stay out of committed YAML.",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "password"
+      ],
+      "title": "BasicAuth"
     }
   }
 }

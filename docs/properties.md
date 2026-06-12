@@ -69,29 +69,30 @@ flowchart LR
 The "Levels" column lists every level that accepts the property. The "Default"
 column shows the value Regressify uses when no level sets it.
 
-| Property              | Type                                  | Default                  | Levels                     | Notes                                                                                                                                                                                                    |
-| --------------------- | ------------------------------------- | ------------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `urlReplacements`     | `ReplacementModel[]`                  | —                        | workspace, suite           | Currently declared but not consumed by the runtime. Reserved for future use; URL replacements are read from `common/_replacement-profiles.yaml`.                                                         |
-| `hideSelectors`       | `string[]`                            | `[]`                     | workspace, suite, scenario | Final empty-array default applied in `createScenario`.                                                                                                                                                   |
-| `removeSelectors`     | `string[]`                            | `[]`                     | workspace, suite, scenario | Final empty-array default applied in `createScenario`.                                                                                                                                                   |
-| `useCssOverride`      | `boolean`                             | `true`                   | workspace, suite, scenario | **strict-bool**                                                                                                                                                                                          |
-| `cssOverridePath`     | `string`                              | `common/_override.css`   | workspace, suite, scenario | Final default applied in `createScenario`.                                                                                                                                                               |
-| `viewportsPath`       | `string`                              | `common/_viewports.yaml` | workspace, suite           | Path is relative to the working directory.                                                                                                                                                               |
-| `debug`               | `boolean`                             | `false`                  | workspace, suite           | When `true` and not running on CI, Backstop launches a visible browser window.                                                                                                                           |
-| `asyncCaptureLimit`   | `number`                              | `5`                      | workspace, suite           | Forwarded to Backstop.                                                                                                                                                                                   |
-| `asyncCompareLimit`   | `number`                              | `50`                     | workspace, suite           | Forwarded to Backstop.                                                                                                                                                                                   |
-| `browser`             | `'chromium' \| 'firefox' \| 'webkit'` | `chromium`               | workspace, suite           | Forwarded as `engineOptions.browser`.                                                                                                                                                                    |
-| `misMatchThreshold`   | `number`                              | `0.1`                    | workspace, suite, scenario | Lower = stricter pixel comparison.                                                                                                                                                                       |
-| `postInteractionWait` | `number`                              | `1`                      | workspace, suite, scenario | Milliseconds Backstop waits after interactions.                                                                                                                                                          |
-| `viewportNames`       | `string \| string[]`                  | — (use all viewports)    | workspace, suite, scenario | Filters `viewportsPath` entries by `label`.                                                                                                                                                              |
-| `bypassCsp`           | `boolean`                             | `false`                  | workspace, suite, scenario | **strict-bool** Enables Chromium-only CSP bypass in the Playwright `onBefore` hook. Required to use `page.addStyleTag`/`addScriptTag` against pages with strict CSP. Has no effect on Firefox or WebKit. |
-| `ignoreSslErrors`     | `boolean`                             | `true`                   | workspace, suite           | **strict-bool** Forwarded as `engineOptions.ignoreHTTPSErrors`.                                                                                                                                          |
-| `state`               | `string`                              | —                        | workspace, suite           | Storage-state file name (under the state directory). When the file exists it is forwarded as `engineOptions.storageState`.                                                                               |
-| `delay`               | `number`                              | `1000`                   | workspace, scenario        | Milliseconds Backstop waits before capturing. Skips the test-suite level.                                                                                                                                |
-| `cookiePath`          | `string`                              | `common/_cookies.yaml`   | workspace, scenario        | Final default applied in `createScenario`. Skips the test-suite level.                                                                                                                                   |
-| `jsOnReadyPath`       | `string`                              | `common/_on-ready.js`    | workspace, scenario        | Final default applied in `createScenario`. Skips the test-suite level.                                                                                                                                   |
-| `noScrollTop`         | `boolean`                             | `false`                  | workspace, scenario        | When `true`, suppresses the auto scroll-to-top before capture.                                                                                                                                           |
-| `requiredLogin`       | `boolean`                             | `false`                  | workspace, scenario        | The CLI flag `--requiredLogin` forces this `true` for every scenario regardless of any level.                                                                                                            |
+| Property              | Type                                  | Default                  | Levels                     | Notes                                                                                                                                                                                                            |
+| --------------------- | ------------------------------------- | ------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `urlReplacements`     | `ReplacementModel[]`                  | —                        | workspace, suite           | Currently declared but not consumed by the runtime. Reserved for future use; URL replacements are read from `common/_replacement-profiles.yaml`.                                                                 |
+| `hideSelectors`       | `string[]`                            | `[]`                     | workspace, suite, scenario | Final empty-array default applied in `createScenario`.                                                                                                                                                           |
+| `removeSelectors`     | `string[]`                            | `[]`                     | workspace, suite, scenario | Final empty-array default applied in `createScenario`.                                                                                                                                                           |
+| `useCssOverride`      | `boolean`                             | `true`                   | workspace, suite, scenario | **strict-bool**                                                                                                                                                                                                  |
+| `cssOverridePath`     | `string`                              | `common/_override.css`   | workspace, suite, scenario | Final default applied in `createScenario`.                                                                                                                                                                       |
+| `viewportsPath`       | `string`                              | `common/_viewports.yaml` | workspace, suite           | Path is relative to the working directory.                                                                                                                                                                       |
+| `debug`               | `boolean`                             | `false`                  | workspace, suite           | When `true` and not running on CI, Backstop launches a visible browser window.                                                                                                                                   |
+| `asyncCaptureLimit`   | `number`                              | `5`                      | workspace, suite           | Forwarded to Backstop.                                                                                                                                                                                           |
+| `asyncCompareLimit`   | `number`                              | `50`                     | workspace, suite           | Forwarded to Backstop.                                                                                                                                                                                           |
+| `browser`             | `'chromium' \| 'firefox' \| 'webkit'` | `chromium`               | workspace, suite           | Forwarded as `engineOptions.browser`.                                                                                                                                                                            |
+| `misMatchThreshold`   | `number`                              | `0.1`                    | workspace, suite, scenario | Lower = stricter pixel comparison.                                                                                                                                                                               |
+| `postInteractionWait` | `number`                              | `1`                      | workspace, suite, scenario | Milliseconds Backstop waits after interactions.                                                                                                                                                                  |
+| `viewportNames`       | `string \| string[]`                  | — (use all viewports)    | workspace, suite, scenario | Filters `viewportsPath` entries by `label`.                                                                                                                                                                      |
+| `bypassCsp`           | `boolean`                             | `false`                  | workspace, suite, scenario | **strict-bool** Enables Chromium-only CSP bypass in the Playwright `onBefore` hook. Required to use `page.addStyleTag`/`addScriptTag` against pages with strict CSP. Has no effect on Firefox or WebKit.         |
+| `ignoreSslErrors`     | `boolean`                             | `true`                   | workspace, suite           | **strict-bool** Forwarded as `engineOptions.ignoreHTTPSErrors`.                                                                                                                                                  |
+| `state`               | `string`                              | —                        | workspace, suite           | Storage-state file name (under the state directory). When the file exists it is forwarded as `engineOptions.storageState`.                                                                                       |
+| `basicAuth`           | `{ username, password }`              | —                        | workspace, suite, scenario | HTTP Basic Authentication. Values may reference env vars with `${VAR}`/`$VAR`. Applied as an `Authorization` header in the Playwright `onBefore` hook before navigation. Skipped if either value resolves empty. |
+| `delay`               | `number`                              | `1000`                   | workspace, scenario        | Milliseconds Backstop waits before capturing. Skips the test-suite level.                                                                                                                                        |
+| `cookiePath`          | `string`                              | `common/_cookies.yaml`   | workspace, scenario        | Final default applied in `createScenario`. Skips the test-suite level.                                                                                                                                           |
+| `jsOnReadyPath`       | `string`                              | `common/_on-ready.js`    | workspace, scenario        | Final default applied in `createScenario`. Skips the test-suite level.                                                                                                                                           |
+| `noScrollTop`         | `boolean`                             | `false`                  | workspace, scenario        | When `true`, suppresses the auto scroll-to-top before capture.                                                                                                                                                   |
+| `requiredLogin`       | `boolean`                             | `false`                  | workspace, scenario        | The CLI flag `--requiredLogin` forces this `true` for every scenario regardless of any level.                                                                                                                    |
 
 ### Scenario-only properties
 
@@ -118,7 +119,36 @@ accepted at the test-suite or workspace level.
 | ----------- | ----------------- | ------------------------------------------------------ |
 | `scenarios` | `ScenarioModel[]` | **Required**. Array of scenarios to run for the suite. |
 
-### Workspace-only behavior
+## HTTP Basic Authentication (`basicAuth`)
+
+When a page is protected by HTTP Basic Authentication (the server responds
+`401` with a `WWW-Authenticate: Basic realm="..."` header), set `basicAuth`
+so Regressify sends an `Authorization: Basic <base64>` header before it
+navigates. This is distinct from form-based login (`common/_signing-in.yaml`),
+which fills in fields on a login page.
+
+Reference environment variables with `${VAR}` (or `$VAR`) so credentials stay
+out of committed YAML:
+
+```yaml
+# regressify.yaml (workspace level)
+basicAuth:
+  username: ${STAGING_USER}
+  password: ${STAGING_PASS}
+```
+
+Then provide the values in the environment when running Regressify, e.g. on
+PowerShell:
+
+```powershell
+$env:STAGING_USER = 'myuser'; $env:STAGING_PASS = 'mypass'; regressify test --test-suite alloy
+```
+
+`basicAuth` follows the normal cascade, so a suite or scenario can override the
+workspace default. If either resolved value is empty (for example an env var is
+unset), the header is skipped and a warning is logged.
+
+## Workspace-only behavior
 
 The workspace file has no required properties. Every property listed above is
 optional, and an empty `regressify.yaml` is equivalent to no file at all.

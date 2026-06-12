@@ -96,6 +96,9 @@
         },
         "ignoreSslErrors": {
           "type": "boolean"
+        },
+        "basicAuth": {
+          "$ref": "#/definitions/BasicAuth"
         }
       },
       "required": [
@@ -259,6 +262,9 @@
         },
         "bypassCsp": {
           "type": "boolean"
+        },
+        "basicAuth": {
+          "$ref": "#/definitions/BasicAuth"
         }
       },
       "required": [
@@ -290,6 +296,24 @@
         "test"
       ],
       "title": "URL Replacements"
+    },
+    "BasicAuth": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "HTTP Basic Authentication credentials applied before navigation. Each value may reference an environment variable with ${VAR} or $VAR so secrets stay out of committed YAML.",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "password"
+      ],
+      "title": "BasicAuth"
     },
     "CheckAction": {
       "type": "object",

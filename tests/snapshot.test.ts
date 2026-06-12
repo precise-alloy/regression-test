@@ -57,7 +57,9 @@ describe('snapshot.ts', () => {
       totalFailed: 1,
     });
     expect(generateSummaryRows([summary])).toContain('class="danger"');
-    expect(generateSummaryRows([null as never, summary])).toContain('class="danger"');
+    const rowsWithNull = generateSummaryRows([null as never, summary]);
+    expect(rowsWithNull).toContain('class="danger"');
+    expect(rowsWithNull).toBe(generateSummaryRows([summary]));
   });
 
   it('hashes file content deterministically and returns null for missing suite structures', () => {

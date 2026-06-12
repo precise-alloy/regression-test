@@ -246,6 +246,7 @@ describe('initialization helpers', () => {
     await migrate();
 
     expect(fs.existsSync(path.join(workspace, 'data'))).toBe(false);
+    expect(fs.existsSync(path.join(workspace, '.engine_scripts'))).toBe(false);
   });
 });
 

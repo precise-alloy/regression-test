@@ -5,7 +5,6 @@ import path from 'path';
 import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
 import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig, BasicAuthModel, BasicAuthConfig } from './types.js';
 import chalk from 'chalk';
-import { exit } from 'process';
 import YAML from 'js-yaml';
 import { getTestUrl } from './replacements.js';
 import { getStatePath } from './state.js';
@@ -406,7 +405,7 @@ function logConfigValidationAndExit(error: ConfigValidationError): never {
   console.log(chalk.red(error.message));
   console.log(chalk.red('Sample command: regressify <command> --test-suite <test-suite>'));
   console.log(chalk.red('Command is either `ref`, `approve` or `test`.'));
-  exit(1);
+  process.exit(1);
 }
 
 export function getConfigs(args: string[], backstopDirName: string): Config[] {

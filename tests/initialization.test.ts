@@ -87,6 +87,8 @@ describe('initialization helpers', () => {
         test: 'regressify test',
       },
     });
+    expect(mergeRegressifyPackageScripts({}).scripts).toMatchObject({ ref: 'regressify ref' });
+    expect(mergeRegressifyPackageScripts(null as never).scripts).toMatchObject({ ref: 'regressify ref' });
 
     await updatePackageJson();
 
@@ -225,6 +227,26 @@ describe('initialization helpers', () => {
 
     expect(merged.recommendations).toContain('custom.extension');
     expect(merged.recommendations?.filter((item) => item === 'redhat.vscode-yaml')).toHaveLength(1);
+    expect(mergeRecommendedExtensions(null as never).recommendations).toBeDefined();
+  });
+
+  it('creates the vscode directory when extensions.json is written before any other setup', async () => {
+    const workspace = createTempWorkspace();
+    useWorkspace(workspace);
+
+    await addExtensions();
+
+    expect(fs.existsSync(path.join(workspace, '.vscode', 'extensions.json'))).toBe(true);
+  });
+
+  it('does nothing when data and engine_scripts folders are absent', async () => {
+    const workspace = createTempWorkspace();
+    useWorkspace(workspace);
+
+    await migrate();
+
+    expect(fs.existsSync(path.join(workspace, 'data'))).toBe(false);
+    expect(fs.existsSync(path.join(workspace, '.engine_scripts'))).toBe(false);
   });
 });
 

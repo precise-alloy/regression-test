@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "bin": {
-    "regressify": "./src/index.js"
+    "regressify": "src/index.js"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",

@@ -39,8 +39,17 @@ jobs:
       - name: Unit tests with coverage gate
         run: npm run test:ci
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
       - name: Install browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npm run install:browsers
+        timeout-minutes: 15
 
       - name: Smoke reference generation
         run: npm run ref -- --test-suite alloy

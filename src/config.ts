@@ -142,9 +142,21 @@ export function resolveStrictBoolean(...values: Array<boolean | undefined>): boo
  * character, so literals such as `pa$ssword` are preserved.
  */
 export function expandEnvReferences(value: string, env: NodeJS.ProcessEnv = process.env): string {
-  return value
-    .replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_match, name) => env[name] ?? '')
-    .replace(/(^|[^A-Za-z0-9_])\$([A-Za-z_][A-Za-z0-9_]*)/g, (_match, prefix, name) => `${prefix}${env[name] ?? ''}`);
+  return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (match, braced, bare, offset: number, source: string) => {
+    if (braced !== undefined) {
+      return env[braced] ?? '';
+    }
+
+    // A bare `$VAR` is only a reference when the `$` starts the string or
+    // follows a non-word character, so literals such as `pa$ssword` are
+    // preserved. The check runs against the original string in a single
+    // pass so a `$VAR` immediately following a `${VAR}` still expands.
+    if (offset > 0 && /[A-Za-z0-9_]/.test(source[offset - 1])) {
+      return match;
+    }
+
+    return env[bare] ?? '';
+  });
 }
 
 /**

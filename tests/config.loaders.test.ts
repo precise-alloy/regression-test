@@ -103,8 +103,12 @@ describe('config loaders and environment helpers', () => {
 
   it('logs the validation message and exits when getConfigs is called without --test-suite', () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('exit:1');
+    }) as never);
 
-    expect(() => getConfigs([], '.backstop')).toThrow(/process\.exit unexpectedly called with|exit:1/);
+    expect(() => getConfigs([], '.backstop')).toThrow('exit:1');
     expect(consoleSpy).toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });

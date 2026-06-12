@@ -52,11 +52,13 @@ describe('config cascade and final Backstop config assembly', () => {
       SUITE_PASS: 'suitepass',
     } as NodeJS.ProcessEnv;
 
-    expect(resolveBasicAuth(undefined, undefined, { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' }, env)).toEqual({
-      origin: 'https://workspace.example.com',
-      username: 'wsuser',
-      password: 'wspass',
-    });
+    expect(resolveBasicAuth(undefined, undefined, { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' }, env)).toEqual([
+      {
+        origin: 'https://workspace.example.com',
+        username: 'wsuser',
+        password: 'wspass',
+      },
+    ]);
 
     expect(
       resolveBasicAuth(
@@ -65,15 +67,41 @@ describe('config cascade and final Backstop config assembly', () => {
         { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' },
         env
       )
-    ).toEqual({ origin: 'https://suite.example.com', username: 'suiteuser', password: 'suitepass' });
+    ).toEqual([
+      { origin: 'https://workspace.example.com', username: 'wsuser', password: 'wspass' },
+      { origin: 'https://suite.example.com', username: 'suiteuser', password: 'suitepass' },
+    ]);
 
     expect(
       resolveBasicAuth({ origin: 'http://literal.example.com:8080/path', username: 'literal', password: 'literalpass' }, undefined, undefined, env)
-    ).toEqual({
-      origin: 'http://literal.example.com:8080',
-      username: 'literal',
-      password: 'literalpass',
-    });
+    ).toEqual([
+      {
+        origin: 'http://literal.example.com:8080',
+        username: 'literal',
+        password: 'literalpass',
+      },
+    ]);
+  });
+
+  it('merges basicAuth arrays across levels and lets more specific levels override by origin', () => {
+    const env = {} as NodeJS.ProcessEnv;
+
+    expect(
+      resolveBasicAuth(
+        { origin: 'https://a.example.com', username: 'scenario-a', password: 'scenario-a-pass' },
+        [
+          { origin: 'https://a.example.com', username: 'suite-a', password: 'suite-a-pass' },
+          { origin: 'https://b.example.com', username: 'suite-b', password: 'suite-b-pass' },
+        ],
+        { origin: 'https://c.example.com', username: 'ws-c', password: 'ws-c-pass' },
+        env
+      )
+    ).toEqual([
+      { origin: 'https://c.example.com', username: 'ws-c', password: 'ws-c-pass' },
+      // Scenario overrides the suite entry for the same origin.
+      { origin: 'https://a.example.com', username: 'scenario-a', password: 'scenario-a-pass' },
+      { origin: 'https://b.example.com', username: 'suite-b', password: 'suite-b-pass' },
+    ]);
   });
 
   it('normalizes only http and https origins for basicAuth', () => {
@@ -166,7 +194,7 @@ describe('config cascade and final Backstop config assembly', () => {
       total: 4,
     });
 
-    expect(result.basicAuth).toEqual({ origin: 'https://test.example.com', username: 'cascade-user', password: 'cascade-pass' });
+    expect(result.basicAuth).toEqual([{ origin: 'https://test.example.com', username: 'cascade-user', password: 'cascade-pass' }]);
   });
 
   it('lets the global requiredLogin flag force true and keeps reference runs unmodified', () => {

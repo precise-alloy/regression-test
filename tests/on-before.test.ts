@@ -57,7 +57,37 @@ describe('playwright onBefore basicAuth setup', () => {
     expect(browserContext.setHTTPCredentials).not.toHaveBeenCalled();
     expect(page.route).not.toHaveBeenCalled();
     expect(console.warn).toHaveBeenCalledWith(
-      'basicAuth origin https://staging.example.com does not match scenario origin https://production.example.com; skipping Basic auth credentials for home'
+      'No basicAuth entry matches scenario origin https://production.example.com (configured: https://staging.example.com); skipping Basic auth credentials for home'
     );
+  });
+
+  it('selects the matching entry when basicAuth is an array of origins', async () => {
+    const page = { route: vi.fn() };
+    const browserContext = {
+      addCookies: vi.fn(),
+      setHTTPCredentials: vi.fn(),
+    };
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const scenario = {
+      basicAuth: [
+        { origin: 'https://staging.example.com', username: 'staging-user', password: 'staging-pass' },
+        { origin: 'https://protected.example.com', username: 'prod-user', password: 'prod-pass' },
+      ],
+      bypassCsp: false,
+      cookiePath: '',
+      index: '1',
+      label: 'home',
+      total: 1,
+      url: 'https://protected.example.com/page',
+    };
+
+    await onBefore(page, scenario, undefined, false, browserContext);
+
+    expect(browserContext.setHTTPCredentials).toHaveBeenCalledWith({
+      origin: 'https://protected.example.com',
+      username: 'prod-user',
+      password: 'prod-pass',
+    });
   });
 });

@@ -98,7 +98,7 @@
           "type": "boolean"
         },
         "basicAuth": {
-          "$ref": "#/definitions/BasicAuth"
+          "$ref": "#/definitions/BasicAuthConfig"
         }
       },
       "required": [
@@ -264,7 +264,7 @@
           "type": "boolean"
         },
         "basicAuth": {
-          "$ref": "#/definitions/BasicAuth"
+          "$ref": "#/definitions/BasicAuthConfig"
         }
       },
       "required": [
@@ -296,6 +296,20 @@
         "test"
       ],
       "title": "URL Replacements"
+    },
+    "BasicAuthConfig": {
+      "description": "HTTP Basic Authentication credentials. Provide a single entry to protect one origin, or an array of entries to protect several origins; the entry matching the scenario's origin is selected at runtime.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/BasicAuth"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BasicAuth"
+          }
+        }
+      ]
     },
     "BasicAuth": {
       "type": "object",

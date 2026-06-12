@@ -3,7 +3,7 @@ import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
 import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
-import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig, BasicAuthModel } from './types.js';
+import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig, BasicAuthModel, BasicAuthConfig } from './types.js';
 import chalk from 'chalk';
 import { exit } from 'process';
 import YAML from 'js-yaml';
@@ -173,36 +173,56 @@ export function normalizeHttpOrigin(value: string): string | undefined {
 }
 
 /**
- * Resolve `basicAuth` across scenario -> suite -> workspace and expand
- * any environment-variable references in the credentials. Returns
- * `undefined` when no level sets it, when the protected origin is invalid,
- * or when either resolved credential is empty (e.g. a referenced env var is
- * missing) so credentials are never applied ambiguously.
+ * Expand and validate a single `basicAuth` entry. Returns `undefined`
+ * (with a warning) when the origin is not a valid http/https origin or
+ * either credential resolves empty, so credentials are never applied
+ * ambiguously.
  */
-export function resolveBasicAuth(
-  scenario?: BasicAuthModel,
-  suite?: BasicAuthModel,
-  workspace?: BasicAuthModel,
-  env: NodeJS.ProcessEnv = process.env
-): BasicAuthModel | undefined {
-  const resolved = scenario ?? suite ?? workspace;
-  if (!resolved) {
-    return undefined;
-  }
-
-  const originValue = expandEnvReferences(resolved.origin ?? '', env);
-  const origin = normalizeHttpOrigin(originValue);
-  const username = expandEnvReferences(resolved.username ?? '', env);
-  const password = expandEnvReferences(resolved.password ?? '', env);
+function resolveBasicAuthEntry(entry: BasicAuthModel, env: NodeJS.ProcessEnv): BasicAuthModel | undefined {
+  const origin = normalizeHttpOrigin(expandEnvReferences(entry.origin ?? '', env));
+  const username = expandEnvReferences(entry.username ?? '', env);
+  const password = expandEnvReferences(entry.password ?? '', env);
 
   if (!origin || !username || !password) {
-    console.warn(
-      chalk.yellow('basicAuth is set but origin, username, or password resolved to an invalid/empty value; skipping Basic auth credentials.')
-    );
+    console.warn(chalk.yellow('A basicAuth entry has an invalid/empty origin, username, or password (e.g. a missing env var); skipping that entry.'));
     return undefined;
   }
 
   return { origin, username, password };
+}
+
+/**
+ * Resolve `basicAuth` across scenario -> suite -> workspace, expanding any
+ * environment-variable references in the credentials. Each level may declare
+ * a single entry or an array of entries (one per protected origin). Entries
+ * from more specific levels override less specific ones with the same
+ * normalized origin, so a scenario can override one origin's credentials
+ * while still inheriting the rest from the suite or workspace. Invalid
+ * entries are dropped; returns `undefined` when no valid entry remains.
+ */
+export function resolveBasicAuth(
+  scenario?: BasicAuthConfig,
+  suite?: BasicAuthConfig,
+  workspace?: BasicAuthConfig,
+  env: NodeJS.ProcessEnv = process.env
+): BasicAuthModel[] | undefined {
+  const byOrigin = new Map<string, BasicAuthModel>();
+
+  // Least specific first so more specific levels override by origin.
+  for (const level of [workspace, suite, scenario]) {
+    if (!level) {
+      continue;
+    }
+
+    for (const entry of Array.isArray(level) ? level : [level]) {
+      const resolved = resolveBasicAuthEntry(entry, env);
+      if (resolved) {
+        byOrigin.set(resolved.origin, resolved);
+      }
+    }
+  }
+
+  return byOrigin.size > 0 ? [...byOrigin.values()] : undefined;
 }
 
 export function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level: number, trail?: string[]) {

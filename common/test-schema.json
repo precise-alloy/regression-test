@@ -96,6 +96,9 @@
         },
         "ignoreSslErrors": {
           "type": "boolean"
+        },
+        "basicAuth": {
+          "$ref": "#/definitions/BasicAuthConfig"
         }
       },
       "required": [
@@ -259,6 +262,9 @@
         },
         "bypassCsp": {
           "type": "boolean"
+        },
+        "basicAuth": {
+          "$ref": "#/definitions/BasicAuthConfig"
         }
       },
       "required": [
@@ -290,6 +296,43 @@
         "test"
       ],
       "title": "URL Replacements"
+    },
+    "BasicAuthConfig": {
+      "description": "HTTP Basic Authentication credentials. Provide a single entry to protect one origin, or an array of entries to protect several origins; the entry matching the scenario's origin is selected at runtime.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/BasicAuth"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BasicAuth"
+          }
+        }
+      ]
+    },
+    "BasicAuth": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "HTTP Basic Authentication credentials applied before navigation. Each value may reference an environment variable with ${VAR} or $VAR so secrets stay out of committed YAML. Origin must be the protected origin (scheme://host:port).",
+      "properties": {
+        "origin": {
+          "type": "string",
+          "description": "Protected origin (scheme://host:port). May contain ${VAR}/$VAR references (including embedded, e.g. https://${HOST}); it is expanded and normalized to an origin at runtime."
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "origin",
+        "username",
+        "password"
+      ],
+      "title": "BasicAuth"
     },
     "CheckAction": {
       "type": "object",

@@ -12,6 +12,28 @@ export interface ReplacementsModel {
 }
 
 /**
+ * HTTP Basic Authentication credentials applied before navigation.
+ *
+ * Each value may reference an environment variable using `${VAR}` (or
+ * `$VAR`) syntax so secrets stay out of committed YAML. Plain literals
+ * are also accepted but discouraged. `origin` must be the exact protected
+ * origin (scheme://host:port), so inherited credentials never apply to
+ * unrelated scenario URLs.
+ */
+export interface BasicAuthModel {
+  origin: string;
+  username: string;
+  password: string;
+}
+
+/**
+ * Config-level `basicAuth` value. A single entry protects one origin; an
+ * array lets one workspace/suite/scenario declare credentials for several
+ * origins, and the matching entry is selected at runtime by origin.
+ */
+export type BasicAuthConfig = BasicAuthModel | BasicAuthModel[];
+
+/**
  * Workspace-level defaults loaded from `regressify.yaml` (or `.yml`)
  * at the workspace root. Provides default values for any property
  * that is not set on the test suite or the scenario.
@@ -36,6 +58,7 @@ export interface WorkspaceConfig {
   bypassCsp?: boolean;
   ignoreSslErrors?: boolean;
   state?: string;
+  basicAuth?: BasicAuthConfig;
   // Scenario-only options that make sense as workspace defaults
   delay?: number;
   cookiePath?: string;
@@ -62,6 +85,7 @@ export interface TestSuiteModel {
   bypassCsp?: boolean;
   ignoreSslErrors?: boolean;
   state?: string;
+  basicAuth?: BasicAuthConfig;
 }
 
 export interface ScenarioModel extends Scenario {
@@ -81,6 +105,7 @@ export interface ScenarioModel extends Scenario {
   noScrollTop?: boolean;
   misMatchThreshold?: number;
   postInteractionWait?: number;
+  basicAuth?: BasicAuthConfig;
 }
 
 export type PersistAction = {

@@ -3,7 +3,7 @@ import { Config, Scenario, ViewportNext } from 'backstopjs';
 import { createScenario } from './scenarios.js';
 import path from 'path';
 import { getFlagArg, getStringArg, parseDataFromFile, getLibraryPath } from './helpers.js';
-import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig } from './types.js';
+import { TestSuiteModel, ScenarioModel, PersistAction, WorkspaceConfig, BasicAuthModel, BasicAuthConfig } from './types.js';
 import chalk from 'chalk';
 import { exit } from 'process';
 import YAML from 'js-yaml';
@@ -134,6 +134,97 @@ export function resolveStrictBoolean(...values: Array<boolean | undefined>): boo
   return values.find((value) => typeof value === 'boolean');
 }
 
+/**
+ * Expand `${VAR}` and `$VAR` references in a string using `env`.
+ * Unset variables expand to an empty string. Strings without any
+ * reference are returned unchanged. A bare `$VAR` is only treated as a
+ * reference when the `$` starts the string or follows a non-word
+ * character, so literals such as `pa$ssword` are preserved.
+ */
+export function expandEnvReferences(value: string, env: NodeJS.ProcessEnv = process.env): string {
+  return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (match, braced, bare, offset: number, source: string) => {
+    if (braced !== undefined) {
+      return env[braced] ?? '';
+    }
+
+    // A bare `$VAR` is only a reference when the `$` starts the string or
+    // follows a non-word character, so literals such as `pa$ssword` are
+    // preserved. The check runs against the original string in a single
+    // pass so a `$VAR` immediately following a `${VAR}` still expands.
+    if (offset > 0 && /[A-Za-z0-9_]/.test(source[offset - 1])) {
+      return match;
+    }
+
+    return env[bare] ?? '';
+  });
+}
+
+export function normalizeHttpOrigin(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return undefined;
+    }
+
+    return url.origin;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Expand and validate a single `basicAuth` entry. Returns `undefined`
+ * (with a warning) when the origin is not a valid http/https origin or
+ * either credential resolves empty, so credentials are never applied
+ * ambiguously.
+ */
+function resolveBasicAuthEntry(entry: BasicAuthModel, env: NodeJS.ProcessEnv): BasicAuthModel | undefined {
+  const origin = normalizeHttpOrigin(expandEnvReferences(entry.origin ?? '', env));
+  const username = expandEnvReferences(entry.username ?? '', env);
+  const password = expandEnvReferences(entry.password ?? '', env);
+
+  if (!origin || !username || !password) {
+    console.warn(chalk.yellow('A basicAuth entry has an invalid/empty origin, username, or password (e.g. a missing env var); skipping that entry.'));
+    return undefined;
+  }
+
+  return { origin, username, password };
+}
+
+/**
+ * Resolve `basicAuth` across scenario -> suite -> workspace, expanding any
+ * environment-variable references in the credentials. Each level may declare
+ * a single entry or an array of entries (one per protected origin). Entries
+ * from more specific levels override less specific ones with the same
+ * normalized origin, so a scenario can override one origin's credentials
+ * while still inheriting the rest from the suite or workspace. Invalid
+ * entries are dropped; returns `undefined` when no valid entry remains.
+ */
+export function resolveBasicAuth(
+  scenario?: BasicAuthConfig,
+  suite?: BasicAuthConfig,
+  workspace?: BasicAuthConfig,
+  env: NodeJS.ProcessEnv = process.env
+): BasicAuthModel[] | undefined {
+  const byOrigin = new Map<string, BasicAuthModel>();
+
+  // Least specific first so more specific levels override by origin.
+  for (const level of [workspace, suite, scenario]) {
+    if (!level) {
+      continue;
+    }
+
+    for (const entry of Array.isArray(level) ? level : [level]) {
+      const resolved = resolveBasicAuthEntry(entry, env);
+      if (resolved) {
+        byOrigin.set(resolved.origin, resolved);
+      }
+    }
+  }
+
+  return byOrigin.size > 0 ? [...byOrigin.values()] : undefined;
+}
+
 export function expandScenarios(model: ScenarioModel, scenarios: ScenarioModel[], level: number, trail?: string[]) {
   const currentIdentifier = getScenarioIdentifier(model, `<anonymous:${level}>`);
   const currentTrail = trail ?? [currentIdentifier];
@@ -240,6 +331,7 @@ export function resolveScenarioOptions({
     useCssOverride: resolveStrictBoolean(scenario.useCssOverride, suite.useCssOverride, workspace.useCssOverride) ?? true,
     cssOverridePath: scenario.cssOverridePath ?? suite.cssOverridePath ?? workspace.cssOverridePath,
     bypassCsp: resolveStrictBoolean(scenario.bypassCsp, suite.bypassCsp, workspace.bypassCsp),
+    basicAuth: resolveBasicAuth(scenario.basicAuth, suite.basicAuth, workspace.basicAuth),
     jsOnReadyPath: scenario.jsOnReadyPath ?? workspace.jsOnReadyPath,
     cookiePath: scenario.cookiePath ?? workspace.cookiePath,
     noScrollTop: scenario.noScrollTop ?? workspace.noScrollTop,

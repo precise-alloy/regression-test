@@ -1,7 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getConfigs, getScenarios, resolveScenarioOptions, resolveViewports } from '../src/config.ts';
+import {
+  getConfigs,
+  getScenarios,
+  resolveScenarioOptions,
+  resolveViewports,
+  expandEnvReferences,
+  normalizeHttpOrigin,
+  resolveBasicAuth,
+} from '../src/config.ts';
 import { createTempWorkspace, useWorkspace, writeWorkspaceFile } from './test-utils.ts';
 
 afterEach(() => {
@@ -20,7 +28,101 @@ describe('config cascade and final Backstop config assembly', () => {
     expect(resolveViewports({} as never, suite, workspace, viewports)).toEqual([{ label: 'Desktop' }]);
   });
 
+  it('expands ${VAR} and $VAR environment references and leaves plain strings untouched', () => {
+    const env = { USER_NAME: 'alice', PASS: 's3cret' } as NodeJS.ProcessEnv;
+
+    expect(expandEnvReferences('${USER_NAME}', env)).toBe('alice');
+    expect(expandEnvReferences('$PASS', env)).toBe('s3cret');
+    expect(expandEnvReferences('${USER_NAME}:$PASS', env)).toBe('alice:s3cret');
+    expect(expandEnvReferences('plain-literal', env)).toBe('plain-literal');
+    expect(expandEnvReferences('${MISSING}', env)).toBe('');
+    // A bare `$VAR` immediately following a `${VAR}` still expands.
+    expect(expandEnvReferences('${USER_NAME}$PASS', env)).toBe('alices3cret');
+    // A `$` embedded inside a word is a literal, not a reference.
+    expect(expandEnvReferences('pa$ssword', env)).toBe('pa$ssword');
+    expect(expandEnvReferences('pa${MISSING}word', env)).toBe('paword');
+  });
+
+  it('resolves basicAuth across scenario -> suite -> workspace and expands env references', () => {
+    const env = {
+      WS_ORIGIN: 'https://workspace.example.com/path',
+      WS_USER: 'wsuser',
+      WS_PASS: 'wspass',
+      SUITE_USER: 'suiteuser',
+      SUITE_PASS: 'suitepass',
+    } as NodeJS.ProcessEnv;
+
+    expect(resolveBasicAuth(undefined, undefined, { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' }, env)).toEqual([
+      {
+        origin: 'https://workspace.example.com',
+        username: 'wsuser',
+        password: 'wspass',
+      },
+    ]);
+
+    expect(
+      resolveBasicAuth(
+        undefined,
+        { origin: 'https://suite.example.com', username: '${SUITE_USER}', password: '${SUITE_PASS}' },
+        { origin: '${WS_ORIGIN}', username: '${WS_USER}', password: '${WS_PASS}' },
+        env
+      )
+    ).toEqual([
+      { origin: 'https://workspace.example.com', username: 'wsuser', password: 'wspass' },
+      { origin: 'https://suite.example.com', username: 'suiteuser', password: 'suitepass' },
+    ]);
+
+    expect(
+      resolveBasicAuth({ origin: 'http://literal.example.com:8080/path', username: 'literal', password: 'literalpass' }, undefined, undefined, env)
+    ).toEqual([
+      {
+        origin: 'http://literal.example.com:8080',
+        username: 'literal',
+        password: 'literalpass',
+      },
+    ]);
+  });
+
+  it('merges basicAuth arrays across levels and lets more specific levels override by origin', () => {
+    const env = {} as NodeJS.ProcessEnv;
+
+    expect(
+      resolveBasicAuth(
+        { origin: 'https://a.example.com', username: 'scenario-a', password: 'scenario-a-pass' },
+        [
+          { origin: 'https://a.example.com', username: 'suite-a', password: 'suite-a-pass' },
+          { origin: 'https://b.example.com', username: 'suite-b', password: 'suite-b-pass' },
+        ],
+        { origin: 'https://c.example.com', username: 'ws-c', password: 'ws-c-pass' },
+        env
+      )
+    ).toEqual([
+      { origin: 'https://c.example.com', username: 'ws-c', password: 'ws-c-pass' },
+      // Scenario overrides the suite entry for the same origin.
+      { origin: 'https://a.example.com', username: 'scenario-a', password: 'scenario-a-pass' },
+      { origin: 'https://b.example.com', username: 'suite-b', password: 'suite-b-pass' },
+    ]);
+  });
+
+  it('normalizes only http and https origins for basicAuth', () => {
+    expect(normalizeHttpOrigin('https://example.com/path?x=1')).toBe('https://example.com');
+    expect(normalizeHttpOrigin('http://example.com:8080/path')).toBe('http://example.com:8080');
+    expect(normalizeHttpOrigin('ftp://example.com')).toBeUndefined();
+    expect(normalizeHttpOrigin('not-a-url')).toBeUndefined();
+  });
+
+  it('returns undefined basicAuth when unset, invalid, or when a referenced env var is missing', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    expect(resolveBasicAuth(undefined, undefined, undefined, {})).toBeUndefined();
+    expect(resolveBasicAuth(undefined, undefined, { origin: '${MISSING}', username: '${MISSING}', password: '${ALSO_MISSING}' }, {})).toBeUndefined();
+    expect(resolveBasicAuth(undefined, undefined, { origin: 'ftp://example.com', username: 'user', password: 'pass' }, {})).toBeUndefined();
+    expect(warn).toHaveBeenCalled();
+  });
+
   it('resolves scenario options across scenario -> suite -> workspace -> default with strict boolean handling', () => {
+    vi.stubEnv('BASIC_USER', 'cascade-user');
+    vi.stubEnv('BASIC_PASS', 'cascade-pass');
     const workspace = createTempWorkspace({
       'common/_replacement-profiles.yaml': [
         'profiles:',
@@ -63,6 +165,7 @@ describe('config cascade and final Backstop config assembly', () => {
         requiredLogin: true,
         misMatchThreshold: 0.4,
         postInteractionWait: 4,
+        basicAuth: { origin: 'https://test.example.com/login', username: '${BASIC_USER}', password: '${BASIC_PASS}' },
       },
       testSuite: 'alloy',
       isRef: false,
@@ -90,6 +193,8 @@ describe('config cascade and final Backstop config assembly', () => {
       index: '1',
       total: 4,
     });
+
+    expect(result.basicAuth).toEqual([{ origin: 'https://test.example.com', username: 'cascade-user', password: 'cascade-pass' }]);
   });
 
   it('lets the global requiredLogin flag force true and keeps reference runs unmodified', () => {

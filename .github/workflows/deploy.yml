@@ -20,7 +20,7 @@ permissions:
 jobs:
   validate:
     timeout-minutes: 20
-    runs-on: windows-2022
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -43,13 +43,16 @@ jobs:
         id: playwright-cache
         uses: actions/cache@v5
         with:
-          path: ~\AppData\Local\ms-playwright
+          path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
 
       - name: Install browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npm run install:browsers
         timeout-minutes: 15
+
+      - name: Install browser system dependencies
+        run: npx playwright install-deps
 
       - name: Smoke reference generation
         run: npm run ref -- --test-suite alloy

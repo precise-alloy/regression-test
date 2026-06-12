@@ -137,10 +137,14 @@ export function resolveStrictBoolean(...values: Array<boolean | undefined>): boo
 /**
  * Expand `${VAR}` and `$VAR` references in a string using `env`.
  * Unset variables expand to an empty string. Strings without any
- * reference are returned unchanged.
+ * reference are returned unchanged. A bare `$VAR` is only treated as a
+ * reference when the `$` starts the string or follows a non-word
+ * character, so literals such as `pa$ssword` are preserved.
  */
 export function expandEnvReferences(value: string, env: NodeJS.ProcessEnv = process.env): string {
-  return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (_match, braced, bare) => env[braced ?? bare] ?? '');
+  return value
+    .replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_match, name) => env[name] ?? '')
+    .replace(/(^|[^A-Za-z0-9_])\$([A-Za-z_][A-Za-z0-9_]*)/g, (_match, prefix, name) => `${prefix}${env[name] ?? ''}`);
 }
 
 /**

@@ -28,6 +28,9 @@ describe('config cascade and final Backstop config assembly', () => {
     expect(expandEnvReferences('${USER_NAME}:$PASS', env)).toBe('alice:s3cret');
     expect(expandEnvReferences('plain-literal', env)).toBe('plain-literal');
     expect(expandEnvReferences('${MISSING}', env)).toBe('');
+    // A `$` embedded inside a word is a literal, not a reference.
+    expect(expandEnvReferences('pa$ssword', env)).toBe('pa$ssword');
+    expect(expandEnvReferences('pa${MISSING}word', env)).toBe('paword');
   });
 
   it('resolves basicAuth across scenario -> suite -> workspace and expands env references', () => {

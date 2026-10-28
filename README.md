@@ -1,3 +1,5 @@
+> **Archived:** This project is no longer maintained and has been replaced by [regressify-rs](https://github.com/precise-alloy/regressify-rs).
+
 # Visual Regression Test
 
 Please check [Documentation](https://tuyen.blog/optimizely-cms/testing/get-started/) for the instructions.
